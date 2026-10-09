@@ -27,4 +27,4 @@ persistence:
       size: 1Gi
 
 trivy:
-  enabled: false
+  enabled: true

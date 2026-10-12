@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bench-check
+  namespace: static
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bench-check
+  template:
+    metadata:
+      labels:
+        app: bench-check
+    spec:
+      imagePullSecrets:
+        - name: harbor-pull
+      containers:
+        - name: bench-check
+          image: harbor.dreadwrym.my.id/apps/bench-check:latest
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bench-check
+  namespace: static
+spec:
+  type: ClusterIP
+  selector:
+    app: bench-check
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bench-check
+  namespace: static
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: bench-check.dreadwrym.my.id
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bench-check
+                port:
+                  number: 80 

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: 
+  name: coredns-custom
+  namespace: kube-system
+data:
+  harbor.server: |
+      harbor.dreadwrym.my.id:53 {
+        errors
+        hosts {
+          192.168.18.43 harbor.dreadwrym.my.id
+        }
+      }

@@ -1,0 +1,15 @@
+controller:
+  numExecutors: 0
+  jenkinsUrlProtocol: https
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hostName: jenkins.dreadwrym.my.id
+  admin:
+    password: admin
+  resources:
+    limits:
+      memory: "2Gi"
+
+persistence:
+  size: 10Gi

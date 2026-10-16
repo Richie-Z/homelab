@@ -12,6 +12,27 @@ controller:
   resources:
     limits:
       memory: "2Gi"
+  additionalPlugins:
+    - pipeline-graph-view
+    - pipeline-stage-view
+    - matrix-auth
+    - github-branch-source
+    - theme-manager
+    - catppuccin-theme
+  JCasC:
+    authorizationStrategy: |-
+      globalMatrix:
+        entries:
+          - group:
+              name: "authenticated"
+              permissions:
+                - "Overall/Administer"
+          - user:
+              name: "anonymous"
+              permissions:
+                - "Overall/Read"
+                - "Job/Read"
+                - "View/Read"
 additionalAgents:
   bun:
     podName: bun

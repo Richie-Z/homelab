@@ -2,6 +2,8 @@ controller:
   numExecutors: 0
   jenkinsUrlProtocol: https
   ingress:
+    annotations:
+      traefik.ingress.kubernetes.io/router.middlewares: jenkins-forwarded-https@kubernetescrd
     enabled: true
     ingressClassName: traefik
     hostName: jenkins.dreadwrym.my.id
@@ -10,6 +12,45 @@ controller:
   resources:
     limits:
       memory: "2Gi"
+additionalAgents:
+  bun:
+    podName: bun
+    customJenkinsLabels: bun
+    sideContainerName: bun
+    image:
+      repository: oven/bun
+      tag: "1-alpine"
+    command: "/bin/sh -c"
+    args: "cat"
+    TTYEnabled: true
+    resources:
+      requests: { cpu: "100m", memory: "256Mi" }
+      limits: { cpu: "1", memory: "1Gi" }
+  buildah:
+    podName: buildah
+    customJenkinsLabels: buildah
+    sideContainerName: buildah
+    image:
+      repository: quay.io/buildah/stable
+      tag: "v1.43.4"
+    command: "/bin/sh -c"
+    args: "cat"
+    TTYEnabled: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    yamlMergeStrategy: merge
+    yamlTemplate: |-
+      spec:
+        securityContext:
+          appArmorProfile:
+            type: Unconfined
+    resources:
+      requests: { cpu: "250m", memory: "512Mi" }
+      limits: { cpu: "2", memory: "2Gi" }
+    volumes:
+      - type: Secret
+        secretName: harbor-ci
+        mountPath: /auth
 
 persistence:
   size: 10Gi

@@ -15,7 +15,12 @@ pipeline {
                 script {
                     def repoUrl = env.GIT_URL ?: 'https://github.com/Richie-Z/homelab.git'
 
-                    def apps = findFiles(glob: 'apps/*/Jenkinsfile')*.path
+                    def apps = sh(
+                            script: 'ls apps/*/Jenkinsfile 2>/dev/null || true',
+                            returnStdout: true
+                        ).trim()
+                        .readLines()
+                        .findAll { it }
                         .collect { it.split('/')[1] }
                         .unique()
                         .sort()

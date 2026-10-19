@@ -65,43 +65,28 @@ pipeline {
                     git url: params.APP_REPO, branch: params.APP_BRANCH, changelog: false, poll: false
                 }
 
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'registry-creds',
-                        usernameVariable: 'REGISTRY_USER',
-                        passwordVariable: 'REGISTRY_PASSWORD'
-                    )
-                ]) {
-                    sh '''
-                        set -eu
-                        set +x
+                sh '''
+                    set -eu
+                    set +x
 
-                        AUTHFILE="$WORKSPACE/.buildah-auth.json"
-                        trap 'rm -f "$AUTHFILE"' EXIT
+                    # Robot account is mounted from the harbor-ci secret.
+                    AUTHFILE=/auth/.dockerconfigjson
 
-                        printf '%s' "$REGISTRY_PASSWORD" |
-                            buildah login \
-                                --authfile "$AUTHFILE" \
-                                --username "$REGISTRY_USER" \
-                                --password-stdin \
-                                "$REGISTRY_HOST"
+                    buildah bud \
+                        --authfile "$AUTHFILE" \
+                        --format docker \
+                        --build-arg AGENTMEMORY_VERSION="$AGENTMEMORY_VERSION" \
+                        --build-arg III_VERSION="$III_VERSION" \
+                        --build-arg III_SDK_VERSION="$III_SDK_VERSION" \
+                        --file "app/$DOCKERFILE" \
+                        --tag "$IMAGE" \
+                        app
 
-                        buildah bud \
-                            --authfile "$AUTHFILE" \
-                            --format docker \
-                            --build-arg AGENTMEMORY_VERSION="$AGENTMEMORY_VERSION" \
-                            --build-arg III_VERSION="$III_VERSION" \
-                            --build-arg III_SDK_VERSION="$III_SDK_VERSION" \
-                            --file "app/$DOCKERFILE" \
-                            --tag "$IMAGE" \
-                            app
-
-                        buildah push \
-                            --authfile "$AUTHFILE" \
-                            "$IMAGE" \
-                            "docker://$IMAGE"
-                    '''
-                }
+                    buildah push \
+                        --authfile "$AUTHFILE" \
+                        "$IMAGE" \
+                        "docker://$IMAGE"
+                '''
             }
         }
 

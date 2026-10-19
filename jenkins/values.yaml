@@ -1,5 +1,8 @@
 controller:
   numExecutors: 0
+  projectNamingStrategy:
+    roleBased:
+      forceExistingJobs: false
   jenkinsUrlProtocol: https
   ingress:
     annotations:
@@ -41,6 +44,14 @@ controller:
                 - "View/Read"
               entries:
                 - group: "authenticated"
+            - name: "anonymous"
+              description: "Unauthenticated read-only access"
+              permissions:
+                - "Overall/Read"
+                - "Job/Read"
+                - "View/Read"
+              entries:
+                - group: "anonymous"
           items:
             # Example: user alice can run only the job named example-pipeline.
             # Copy this block per pipeline. Pattern is an anchored regex.

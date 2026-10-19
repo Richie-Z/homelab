@@ -51,16 +51,14 @@ controller:
               entries:
                 - group: "anonymous"
           items:
-            # Example: user alice can run only the job named example-pipeline.
-            # Copy this block per pipeline. Pattern is an anchored regex.
-            - name: "run-example-pipeline"
-              description: "Run example-pipeline only"
-              pattern: "^example-pipeline$"
+            - name: "run-bench-check"
+              description: "Run BenchCheck only"
+              pattern: "^BenchCheck$"
               permissions:
                 - "Job/Read"
                 - "Job/Build"
               entries:
-                - user: "alice"
+                - user: "test"
 agent:
   podRetention: "Never"
   garbageCollection:

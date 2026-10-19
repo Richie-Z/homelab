@@ -50,7 +50,7 @@ pipeline {
                     }.join('\n')
 
                     writeFile file: 'generated-jobs.groovy', text: dsl
-                    jobDsl targets: 'generated-jobs.groovy', removedJobAction: 'IGNORE', sandbox: true
+                    jobDsl targets: 'generated-jobs.groovy', removedJobAction: 'IGNORE'
 
                     echo "Seeded jobs: ${apps.join(', ')}"
                 }

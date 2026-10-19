@@ -84,6 +84,10 @@ controller:
                   scm('H/5 * * * *')
                 }
               }
+      job-dsl-security: |
+        unclassified:
+          globalJobDslSecurityConfiguration:
+            useScriptSecurity: false
 agent:
   podRetention: "Never"
   garbageCollection:

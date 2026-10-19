@@ -14,6 +14,7 @@ pipeline {
 
                 script {
                     def repoUrl = env.GIT_URL ?: 'https://github.com/Richie-Z/homelab.git'
+                    def branchName = (env.GIT_BRANCH ?: 'origin/master').replaceFirst('origin/', '')
 
                     def apps = sh(
                             script: 'ls apps/*/Jenkinsfile 2>/dev/null || true',
@@ -38,7 +39,7 @@ pipeline {
                               scm {
                                 git {
                                   remote { url('${repoUrl}') }
-                                  branch('*/main')
+                                  branch('*/${branchName}')
                                 }
                               }
                               scriptPath('apps/${app}/Jenkinsfile')

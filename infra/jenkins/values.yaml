@@ -105,6 +105,19 @@ additionalAgents:
       - type: Secret
         secretName: harbor-ci
         mountPath: /auth
+  terraform:
+    podName: terraform
+    customJenkinsLabels: terraform
+    sideContainerName: terraform
+    image:
+      repository: hashicorp/terraform
+      tag: "1.16.6"
+    command: "/bin/sh -c"
+    args: "cat"
+    TTYEnabled: true
+    resources:
+      requests: { cpu: "100m", memory: "256Mi", ephemeral-storage: "1Gi" }
+      limits: { cpu: "1", memory: "1Gi", ephemeral-storage: "5Gi" }
 
 persistence:
   size: 10Gi

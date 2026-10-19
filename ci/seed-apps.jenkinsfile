@@ -29,7 +29,7 @@ pipeline {
                         error 'No apps/*/Jenkinsfile found'
                     }
 
-                    def dsl = apps.collect { app ->
+                    def dsl = "folder('apps')\n" + apps.collect { app ->
                         """
                         pipelineJob('apps/${app}') {
                           description('Generated from apps/${app}/Jenkinsfile')

@@ -85,7 +85,7 @@ controller:
                 }
               }
       job-dsl-security: |
-        unclassified:
+        security:
           globalJobDslSecurityConfiguration:
             useScriptSecurity: false
 agent:

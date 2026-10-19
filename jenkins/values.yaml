@@ -16,23 +16,42 @@ controller:
     - pipeline-graph-view
     - pipeline-stage-view
     - matrix-auth
+    - role-strategy
     - github-branch-source
     - theme-manager
     - catppuccin-theme
   JCasC:
+    # Role assignments are the source of truth here: JCasC replaces the whole
+    # role tree on every reload, so assign roles here, not in the UI.
+    # Users can still be created in Manage Jenkins > Users.
     authorizationStrategy: |-
-      globalMatrix:
-        entries:
-          - group:
-              name: "authenticated"
+      roleBased:
+        roles:
+          global:
+            - name: "admin"
+              description: "Jenkins administrators"
               permissions:
                 - "Overall/Administer"
-          - user:
-              name: "anonymous"
+              entries:
+                - user: "admin"
+            - name: "user"
+              description: "Logged-in users: read-only dashboard, no job access"
               permissions:
                 - "Overall/Read"
-                - "Job/Read"
                 - "View/Read"
+              entries:
+                - group: "authenticated"
+          items:
+            # Example: user alice can run only the job named example-pipeline.
+            # Copy this block per pipeline. Pattern is an anchored regex.
+            - name: "run-example-pipeline"
+              description: "Run example-pipeline only"
+              pattern: "^example-pipeline$"
+              permissions:
+                - "Job/Read"
+                - "Job/Build"
+              entries:
+                - user: "alice"
 additionalAgents:
   bun:
     podName: bun

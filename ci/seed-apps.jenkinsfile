@@ -1,0 +1,56 @@
+// Seed job: creates one pipeline job per apps/*/Jenkinsfile in this repo.
+// Triggered by SCM polling (configured in infra/jenkins/values.yaml).
+pipeline {
+    agent { label 'buildah' }
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+    }
+
+    stages {
+        stage('Create app jobs') {
+            steps {
+                checkout scm
+
+                script {
+                    def repoUrl = env.GIT_URL ?: 'https://github.com/Richie-Z/homelab.git'
+
+                    def apps = findFiles(glob: 'apps/*/Jenkinsfile')*.path
+                        .collect { it.split('/')[1] }
+                        .unique()
+                        .sort()
+
+                    if (!apps) {
+                        error 'No apps/*/Jenkinsfile found'
+                    }
+
+                    def dsl = apps.collect { app ->
+                        """
+                        pipelineJob('apps/${app}') {
+                          description('Generated from apps/${app}/Jenkinsfile')
+                          definition {
+                            cpsScm {
+                              scm {
+                                git {
+                                  remote { url('${repoUrl}') }
+                                  branch('*/main')
+                                }
+                              }
+                              scriptPath('apps/${app}/Jenkinsfile')
+                            }
+                          }
+                          triggers { scm('H/5 * * * *') }
+                        }
+                        """
+                    }.join('\n')
+
+                    writeFile file: 'generated-jobs.groovy', text: dsl
+                    jobDsl targets: 'generated-jobs.groovy', removedJobAction: 'IGNORE', sandbox: true
+
+                    echo "Seeded jobs: ${apps.join(', ')}"
+                }
+            }
+        }
+    }
+}

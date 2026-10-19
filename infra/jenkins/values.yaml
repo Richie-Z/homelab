@@ -20,6 +20,7 @@ controller:
     - pipeline-stage-view
     - role-strategy
     - github-branch-source
+    - job-dsl
     - theme-manager
     - catppuccin-theme
   JCasC:
@@ -59,6 +60,30 @@ controller:
                 - "Job/Build"
               entries:
                 - user: "test"
+    # Seed job: scans apps/*/Jenkinsfile in this repo and creates one job per app.
+    configScripts:
+      seed-job: |
+        jobs:
+          - script: |
+              pipelineJob('seed-apps') {
+                description('Creates a pipeline job for every apps/*/Jenkinsfile in the homelab repo')
+                definition {
+                  cpsScm {
+                    scm {
+                      git {
+                        remote {
+                          url('https://github.com/Richie-Z/homelab.git')
+                        }
+                        branch('*/master')
+                      }
+                    }
+                    scriptPath('ci/seed-apps.jenkinsfile')
+                  }
+                }
+                triggers {
+                  scm('H/5 * * * *')
+                }
+              }
 agent:
   podRetention: "Never"
   garbageCollection:

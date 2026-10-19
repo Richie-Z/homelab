@@ -4,25 +4,33 @@ controller:
     roleBased:
       forceExistingJobs: false
   jenkinsUrlProtocol: https
+  image:
+    tag: "2.580.1-jdk25"
   ingress:
     annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
       traefik.ingress.kubernetes.io/router.middlewares: jenkins-forwarded-https@kubernetescrd
     enabled: true
     ingressClassName: traefik
     hostName: jenkins.dreadwrym.my.id
+    tls:
+      - secretName: jenkins-tls
+        hosts:
+          - jenkins.dreadwrym.my.id
   admin:
     password: admin
   resources:
     limits:
       memory: "2Gi"
   additionalPlugins:
-    - pipeline-graph-view
-    - pipeline-stage-view
-    - matrix-auth
-    - role-strategy
-    - github-branch-source
-    - theme-manager
-    - catppuccin-theme
+    - pipeline-graph-view:1053.v9df19e6ceed2
+    - pipeline-stage-view:2.41
+    - role-strategy:927.v9cf5527c4085
+    - github-branch-source:1986.v801e40614d00
+    - theme-manager:346.v06cca_64c6a_37
+    - catppuccin-theme:15.v3940ff14e600
+  installLatestPlugins: false
+  overwritePluginsFromImage: false
   JCasC:
     # Role assignments are the source of truth here: JCasC replaces the whole
     # role tree on every reload, so assign roles here, not in the UI.
@@ -45,10 +53,9 @@ controller:
               entries:
                 - group: "authenticated"
             - name: "anonymous"
-              description: "Unauthenticated read-only access"
+              description: "Unauthenticated read-only dashboard access"
               permissions:
                 - "Overall/Read"
-                - "Job/Read"
                 - "View/Read"
               entries:
                 - group: "anonymous"
@@ -63,6 +70,11 @@ controller:
                 - "Job/Build"
               entries:
                 - user: "alice"
+agent:
+  podRetention: "Never"
+  garbageCollection:
+    enabled: true
+    timeout: 300
 additionalAgents:
   bun:
     podName: bun
@@ -75,8 +87,8 @@ additionalAgents:
     args: "cat"
     TTYEnabled: true
     resources:
-      requests: { cpu: "100m", memory: "256Mi" }
-      limits: { cpu: "1", memory: "1Gi" }
+      requests: { cpu: "100m", memory: "256Mi", ephemeral-storage: "1Gi" }
+      limits: { cpu: "1", memory: "1Gi", ephemeral-storage: "5Gi" }
   buildah:
     podName: buildah
     customJenkinsLabels: buildah
@@ -95,9 +107,11 @@ additionalAgents:
         securityContext:
           appArmorProfile:
             type: Unconfined
+          seccompProfile:
+            type: Unconfined
     resources:
-      requests: { cpu: "250m", memory: "512Mi" }
-      limits: { cpu: "2", memory: "2Gi" }
+      requests: { cpu: "250m", memory: "512Mi", ephemeral-storage: "2Gi" }
+      limits: { cpu: "2", memory: "2Gi", ephemeral-storage: "10Gi" }
     volumes:
       - type: Secret
         secretName: harbor-ci

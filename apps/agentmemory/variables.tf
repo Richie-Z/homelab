@@ -1,9 +1,3 @@
-variable "namespace" {
-  description = "Namespace for AgentMemory resources"
-  type        = string
-  default     = "agentmemory"
-}
-
 variable "image" {
   description = "AgentMemory image built and pushed by Jenkins"
   type        = string

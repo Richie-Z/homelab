@@ -1,0 +1,43 @@
+# Shared identity for Jenkins Terraform agent pods (see infra/jenkins/values.yaml).
+# Generic across apps: namespace lifecycle plus admin inside every namespace,
+# so app configs need no extra RBAC. Not cluster-admin.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: terraform-agent
+  namespace: jenkins
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: terraform-agent-namespaces
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "create", "patch", "update", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: terraform-agent-namespaces
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: terraform-agent-namespaces
+subjects:
+  - kind: ServiceAccount
+    name: terraform-agent
+    namespace: jenkins
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: terraform-agent-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - kind: ServiceAccount
+    name: terraform-agent
+    namespace: jenkins

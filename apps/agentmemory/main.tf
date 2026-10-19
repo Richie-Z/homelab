@@ -1,7 +1,13 @@
+resource "kubernetes_namespace_v1" "agentmemory" {
+  metadata {
+    name = "agentmemory"
+  }
+}
+
 resource "kubernetes_persistent_volume_claim_v1" "agentmemory_data" {
   metadata {
     name      = "agentmemory-data"
-    namespace = var.namespace
+    namespace = kubernetes_namespace_v1.agentmemory.metadata[0].name
   }
 
   spec {
@@ -23,7 +29,7 @@ resource "kubernetes_persistent_volume_claim_v1" "agentmemory_data" {
 resource "kubernetes_deployment_v1" "agentmemory" {
   metadata {
     name      = "agentmemory"
-    namespace = var.namespace
+    namespace = kubernetes_namespace_v1.agentmemory.metadata[0].name
 
     labels = {
       app = "agentmemory"
@@ -148,7 +154,7 @@ resource "kubernetes_deployment_v1" "agentmemory" {
 resource "kubernetes_service_v1" "agentmemory" {
   metadata {
     name      = "agentmemory"
-    namespace = var.namespace
+    namespace = kubernetes_namespace_v1.agentmemory.metadata[0].name
   }
 
   spec {
@@ -169,7 +175,7 @@ resource "kubernetes_service_v1" "agentmemory" {
 resource "kubernetes_ingress_v1" "agentmemory" {
   metadata {
     name      = "agentmemory"
-    namespace = var.namespace
+    namespace = kubernetes_namespace_v1.agentmemory.metadata[0].name
   }
 
   spec {

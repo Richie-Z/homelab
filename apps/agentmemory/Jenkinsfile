@@ -96,36 +96,27 @@ pipeline {
             steps {
                 checkout scm
 
-                withCredentials([
-                    file(
-                        credentialsId: 'k3s-kubeconfig',
-                        variable: 'KUBECONFIG'
-                    )
-                ]) {
-                    dir('apps/agentmemory') {
-                        sh '''
-                            set -eu
+                dir('apps/agentmemory') {
+                    sh '''
+                        set -eu
 
-                            export KUBE_CONFIG_PATH="$KUBECONFIG"
+                        terraform init \
+                          -input=false \
+                          -backend-config="in_cluster_config=true"
 
-                            terraform init \
-                              -input=false \
-                              -backend-config="config_path=$KUBECONFIG"
+                        terraform validate
 
-                            terraform validate
+                        terraform plan \
+                          -input=false \
+                          -out=tfplan \
+                          -var="image=${IMAGE}" \
+                          -var="hostname=${PUBLIC_HOSTNAME}"
 
-                            terraform plan \
-                              -input=false \
-                              -out=tfplan \
-                              -var="image=${IMAGE}" \
-                              -var="hostname=${PUBLIC_HOSTNAME}"
-
-                            terraform apply \
-                              -input=false \
-                              -auto-approve \
-                              tfplan
-                        '''
-                    }
+                        terraform apply \
+                          -input=false \
+                          -auto-approve \
+                          tfplan
+                    '''
                 }
             }
         }

@@ -7,14 +7,14 @@ terraform {
   }
 
   # State lives in the cluster so Jenkins runs are not tied to its workspace.
-  # Jenkins overrides config_path with the kubeconfig credential file.
+  # Pass credentials at init: the Jenkins agent uses in_cluster_config, local
+  # runs use -backend-config="config_path=$HOME/.kube/config".
   backend "kubernetes" {
     secret_suffix = "agentmemory"
     namespace     = "default"
-    config_path   = "~/.kube/config"
   }
 }
 
 # No config_path here: the provider reads KUBE_CONFIG_PATH when set, otherwise
-# falls back to ~/.kube/config.
+# uses the in-cluster service account.
 provider "kubernetes" {}

@@ -4,33 +4,24 @@ controller:
     roleBased:
       forceExistingJobs: false
   jenkinsUrlProtocol: https
-  image:
-    tag: "2.580.1-jdk25"
   ingress:
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
       traefik.ingress.kubernetes.io/router.middlewares: jenkins-forwarded-https@kubernetescrd
     enabled: true
     ingressClassName: traefik
     hostName: jenkins.dreadwrym.my.id
-    tls:
-      - secretName: jenkins-tls
-        hosts:
-          - jenkins.dreadwrym.my.id
   admin:
     password: admin
   resources:
     limits:
       memory: "2Gi"
   additionalPlugins:
-    - pipeline-graph-view:1053.v9df19e6ceed2
-    - pipeline-stage-view:2.41
-    - role-strategy:927.v9cf5527c4085
-    - github-branch-source:1986.v801e40614d00
-    - theme-manager:346.v06cca_64c6a_37
-    - catppuccin-theme:15.v3940ff14e600
-  installLatestPlugins: false
-  overwritePluginsFromImage: false
+    - pipeline-graph-view
+    - pipeline-stage-view
+    - role-strategy
+    - github-branch-source
+    - theme-manager
+    - catppuccin-theme
   JCasC:
     # Role assignments are the source of truth here: JCasC replaces the whole
     # role tree on every reload, so assign roles here, not in the UI.

@@ -13,6 +13,7 @@ charts=(
 
 for entry in "${charts[@]}"; do
 	IFS='|' read -r dir api values <<<"$entry"
+	dir="infra/$dir"
 
 	tag=$(curl -fsSL "$api" | jq -r '.tag_name')
 

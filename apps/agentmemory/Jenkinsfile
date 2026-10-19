@@ -1,0 +1,148 @@
+pipeline {
+    agent none
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        skipDefaultCheckout(true)
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
+    parameters {
+        string(
+            name: 'APP_REPO',
+            defaultValue: 'https://github.com/owner/agentmemory.git',
+            description: 'Git URL of the agentmemory application repo'
+        )
+        string(
+            name: 'APP_BRANCH',
+            defaultValue: 'main',
+            description: 'Branch of the application repo to build'
+        )
+        string(
+            name: 'DOCKERFILE',
+            defaultValue: 'deploy/coolify/Dockerfile',
+            description: 'Dockerfile path inside the application repo'
+        )
+    }
+
+    environment {
+        REGISTRY_HOST = 'harbor.dreadwrym.my.id'
+        IMAGE_REPO    = 'harbor.dreadwrym.my.id/library/agentmemory'
+
+        PUBLIC_HOSTNAME = 'agentmemory.dreadwrym.my.id'
+
+        AGENTMEMORY_VERSION = '0.9.30'
+        III_VERSION         = '0.22.1'
+        III_SDK_VERSION     = '0.22.1'
+    }
+
+    stages {
+        stage('Checkout') {
+            agent { label 'buildah' }
+
+            steps {
+                checkout scm
+
+                script {
+                    env.IMAGE_TAG = sh(
+                        script: 'git rev-parse --short=12 HEAD',
+                        returnStdout: true
+                    ).trim()
+
+                    env.IMAGE = "${env.IMAGE_REPO}:${env.IMAGE_TAG}"
+                }
+
+                echo "Building ${IMAGE}"
+            }
+        }
+
+        stage('Build Image') {
+            agent { label 'buildah' }
+
+            steps {
+                dir('app') {
+                    git url: params.APP_REPO, branch: params.APP_BRANCH, changelog: false, poll: false
+                }
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'registry-creds',
+                        usernameVariable: 'REGISTRY_USER',
+                        passwordVariable: 'REGISTRY_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        set -eu
+                        set +x
+
+                        AUTHFILE="$WORKSPACE/.buildah-auth.json"
+                        trap 'rm -f "$AUTHFILE"' EXIT
+
+                        printf '%s' "$REGISTRY_PASSWORD" |
+                            buildah login \
+                                --authfile "$AUTHFILE" \
+                                --username "$REGISTRY_USER" \
+                                --password-stdin \
+                                "$REGISTRY_HOST"
+
+                        buildah bud \
+                            --authfile "$AUTHFILE" \
+                            --format docker \
+                            --build-arg AGENTMEMORY_VERSION="$AGENTMEMORY_VERSION" \
+                            --build-arg III_VERSION="$III_VERSION" \
+                            --build-arg III_SDK_VERSION="$III_SDK_VERSION" \
+                            --file "app/$DOCKERFILE" \
+                            --tag "$IMAGE" \
+                            app
+
+                        buildah push \
+                            --authfile "$AUTHFILE" \
+                            "$IMAGE" \
+                            "docker://$IMAGE"
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy with Terraform') {
+            agent { label 'terraform' }
+
+            steps {
+                checkout scm
+
+                withCredentials([
+                    file(
+                        credentialsId: 'k3s-kubeconfig',
+                        variable: 'KUBECONFIG'
+                    )
+                ]) {
+                    dir('apps/agentmemory') {
+                        sh '''
+                            set -eu
+
+                            export KUBE_CONFIG_PATH="$KUBECONFIG"
+
+                            terraform init \
+                              -input=false \
+                              -backend-config="config_path=$KUBECONFIG"
+
+                            terraform validate
+
+                            terraform plan \
+                              -input=false \
+                              -out=tfplan \
+                              -var="image=${IMAGE}" \
+                              -var="hostname=${PUBLIC_HOSTNAME}"
+
+                            terraform apply \
+                              -input=false \
+                              -auto-approve \
+                              tfplan
+                        '''
+                    }
+                }
+            }
+        }
+    }
+}

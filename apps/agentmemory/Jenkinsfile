@@ -35,62 +35,85 @@ pipeline {
         III_VERSION         = '0.22.1'
         III_SDK_VERSION     = '0.22.1'
     }
+
     stages {
-        stage('Build Image') {
+        stage('Build & Push') {
             agent { label 'buildah' }
 
-            steps {
-                dir('app') {
-                    git url: params.APP_REPO, branch: params.APP_BRANCH, changelog: false, poll: false
+            stages {
+                stage('Checkout') {
+                    steps {
+                        dir('app') {
+                            git url: params.APP_REPO, branch: params.APP_BRANCH, changelog: false, poll: false
+                        }
+
+                        script {
+                            def appSha = sh(script: 'git -C app rev-parse --short=12 HEAD', returnStdout: true).trim()
+                            env.IMAGE = "${env.IMAGE_REPO}:${appSha}-${env.BUILD_NUMBER}"
+                        }
+                        echo "Building ${env.IMAGE}"
+                    }
                 }
 
-                script {
-                    def appSha = sh(script: 'git -C app rev-parse --short=12 HEAD', returnStdout: true).trim()
-                    env.IMAGE = "${env.IMAGE_REPO}:${appSha}-${env.BUILD_NUMBER}"
+                stage('Build Image') {
+                    steps {
+                        container('buildah') {
+                            sh '''
+                                set -eu
+
+                                buildah build \
+                                    --storage-driver=vfs \
+                                    --isolation=chroot \
+                                    --authfile /auth/.dockerconfigjson \
+                                    --build-arg AGENTMEMORY_VERSION="$AGENTMEMORY_VERSION" \
+                                    --build-arg III_VERSION="$III_VERSION" \
+                                    --build-arg III_SDK_VERSION="$III_SDK_VERSION" \
+                                    --file "app/$DOCKERFILE" \
+                                    --tag "$IMAGE" \
+                                    app
+                            '''
+                        }
+                    }
                 }
-                echo "Building ${env.IMAGE}"
 
-                container('buildah') {
-                    sh '''
-                        set -eu
-                        set +x
+                stage('Push Image') {
+                    steps {
+                        container('buildah') {
+                            sh '''
+                                set -eu
 
-                        AUTHFILE=/auth/.dockerconfigjson
-
-                        buildah build \
-                            --authfile "$AUTHFILE" \
-                            --format docker \
-                            --build-arg AGENTMEMORY_VERSION="$AGENTMEMORY_VERSION" \
-                            --build-arg III_VERSION="$III_VERSION" \
-                            --build-arg III_SDK_VERSION="$III_SDK_VERSION" \
-                            --file "app/$DOCKERFILE" \
-                            --tag "$IMAGE" \
-                            app
-
-                        buildah push --authfile "$AUTHFILE" "$IMAGE" "docker://$IMAGE"
-                    '''
+                                buildah --storage-driver=vfs push \
+                                    --authfile /auth/.dockerconfigjson \
+                                    "$IMAGE" "docker://$IMAGE"
+                            '''
+                        }
+                    }
                 }
             }
         }
 
-        stage('Deploy with Terraform') {
+        stage('Deploy') {
             agent { label 'terraform' }
+
+            when {
+                expression { (env.BRANCH_NAME ?: env.GIT_BRANCH) in ['master', 'origin/master'] }
+            }
 
             steps {
                 checkout scm
 
-                container('terraform'){
+                container('terraform') {
                     dir('apps/agentmemory') {
                         sh '''
                             set -eu
 
                             terraform init -input=false -lock-timeout=60s \
-                            -backend-config="in_cluster_config=true"
+                              -backend-config="in_cluster_config=true"
 
                             terraform validate
 
                             terraform plan -input=false -lock-timeout=60s -out=tfplan \
-                            -var="image=${IMAGE}" -var="hostname=${PUBLIC_HOSTNAME}"
+                              -var="image=${IMAGE}" -var="hostname=${PUBLIC_HOSTNAME}"
 
                             terraform apply -input=false -lock-timeout=60s -auto-approve tfplan
                         '''

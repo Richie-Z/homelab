@@ -225,6 +225,11 @@ resource "kubernetes_ingress_v1" "agentmemory" {
   spec {
     ingress_class_name = "traefik"
 
+    tls {
+      hosts       = [var.hostname]
+      secret_name = "agentmemory-tls"
+    }
+
     rule {
       host = var.hostname
 

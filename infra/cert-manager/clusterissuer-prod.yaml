@@ -28,3 +28,16 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - harbor.dreadwrym.my.id
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: agentmemory-tls
+  namespace: agentmemory
+spec:
+  secretName: agentmemory-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - agentmemory.dreadwrym.my.id

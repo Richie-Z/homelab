@@ -63,6 +63,12 @@ resource "kubernetes_deployment_v1" "agentmemory" {
       spec {
         termination_grace_period_seconds = 60
 
+        # Harbor project `apps` is private; this secret is created outside
+        # Terraform from the Jenkins `harbor-ci` dockerconfig.
+        image_pull_secrets {
+          name = "harbor-pull"
+        }
+
         container {
           name              = "agentmemory"
           image             = var.image

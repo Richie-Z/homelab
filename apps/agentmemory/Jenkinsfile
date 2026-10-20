@@ -27,9 +27,13 @@ pipeline {
 
     environment {
         REGISTRY_HOST = 'harbor.dreadwrym.my.id'
-        IMAGE_REPO    = 'harbor.dreadwrym.my.id/library/agentmemory'
+        IMAGE_REPO    = 'harbor.dreadwrym.my.id/apps/agentmemory'
 
         PUBLIC_HOSTNAME = 'agentmemory.dreadwrym.my.id'
+
+        APP_REPO_URL    = "${params.APP_REPO ?: 'https://github.com/owner/agentmemory.git'}"
+        APP_BRANCH_NAME = "${params.APP_BRANCH ?: 'main'}"
+        DOCKERFILE_PATH = "${params.DOCKERFILE ?: 'deploy/coolify/Dockerfile'}"
 
         AGENTMEMORY_VERSION = '0.9.30'
         III_VERSION         = '0.22.1'
@@ -61,7 +65,7 @@ pipeline {
 
             steps {
                 dir('app') {
-                    git url: params.APP_REPO, branch: params.APP_BRANCH, changelog: false, poll: false
+                    git url: env.APP_REPO_URL, branch: env.APP_BRANCH_NAME, changelog: false, poll: false
                 }
 
                 sh '''
@@ -77,7 +81,7 @@ pipeline {
                         --build-arg AGENTMEMORY_VERSION="$AGENTMEMORY_VERSION" \
                         --build-arg III_VERSION="$III_VERSION" \
                         --build-arg III_SDK_VERSION="$III_SDK_VERSION" \
-                        --file "app/$DOCKERFILE" \
+                        --file "app/$DOCKERFILE_PATH" \
                         --tag "$IMAGE" \
                         app
 

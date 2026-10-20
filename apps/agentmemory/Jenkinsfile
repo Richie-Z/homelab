@@ -61,6 +61,10 @@ pipeline {
                             sh '''
                                 set -eu
 
+                                REGCONF="$(mktemp)"
+                                printf 'unqualified-search-registries = ["docker.io"]\\n' > "$REGCONF"
+                                export CONTAINERS_REGISTRIES_CONF="$REGCONF" 
+
                                 buildah build \
                                     --storage-driver=vfs \
                                     --isolation=chroot \

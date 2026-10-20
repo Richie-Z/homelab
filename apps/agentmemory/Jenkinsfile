@@ -100,28 +100,40 @@ pipeline {
         stage('Deploy') {
             agent { label 'terraform' }
 
-            when {
-                expression { (env.BRANCH_NAME ?: env.GIT_BRANCH) in ['master', 'origin/master'] }
-            }
+            stages {
+                stage('Checkout') {
+                    steps {
+                        checkout scm
+                    }
+                }
 
-            steps {
-                checkout scm
+                stage('Terraform Init') {
+                    steps {
+                        container('terraform') {
+                            dir('apps/agentmemory') {
+                                sh 'terraform init -input=false -lock-timeout=60s -backend-config="in_cluster_config=true"'
+                            }
+                        }
+                    }
+                }
 
-                container('terraform') {
-                    dir('apps/agentmemory') {
-                        sh '''
-                            set -eu
+                stage('Terraform Plan') {
+                    steps {
+                        container('terraform') {
+                            dir('apps/agentmemory') {
+                                sh 'terraform plan -input=false -lock-timeout=60s -out=tfplan -var="image=${IMAGE}" -var="hostname=${PUBLIC_HOSTNAME}"'
+                            }
+                        }
+                    }
+                }
 
-                            terraform init -input=false -lock-timeout=60s \
-                              -backend-config="in_cluster_config=true"
-
-                            terraform validate
-
-                            terraform plan -input=false -lock-timeout=60s -out=tfplan \
-                              -var="image=${IMAGE}" -var="hostname=${PUBLIC_HOSTNAME}"
-
-                            terraform apply -input=false -lock-timeout=60s -auto-approve tfplan
-                        '''
+                stage('Terraform Apply') {
+                    steps {
+                        container('terraform') {
+                            dir('apps/agentmemory') {
+                                sh 'terraform apply -input=false -lock-timeout=60s -auto-approve tfplan'
+                            }
+                        }
                     }
                 }
             }

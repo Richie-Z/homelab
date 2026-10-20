@@ -94,6 +94,17 @@ resource "kubernetes_deployment_v1" "agentmemory" {
             value = "2"
           }
 
+          # The image entrypoint rewrites iii-config.yaml with a block-style
+          # allowed_origins list, but the published @agentmemory/agentmemory
+          # 0.9.30 renderer replaces only the key line and leaves the block
+          # items behind, producing invalid YAML. The docker config uses a
+          # flow-style list, so the renderer produces valid YAML.
+          # Remove this once a release contains the engine-config render fix.
+          env {
+            name  = "AGENTMEMORY_III_CONFIG"
+            value = "/opt/agentmemory/node_modules/@agentmemory/agentmemory/dist/iii-config.docker.yaml"
+          }
+
           resources {
             requests = {
               cpu    = "250m"
@@ -128,9 +139,11 @@ resource "kubernetes_deployment_v1" "agentmemory" {
             failure_threshold = 3
           }
 
+          # /agentmemory/health requires the HMAC bearer token, which probes
+          # cannot send, so readiness uses the unauthenticated livez route.
           readiness_probe {
             http_get {
-              path = "/agentmemory/health"
+              path = "/agentmemory/livez"
               port = "http"
             }
 

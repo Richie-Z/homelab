@@ -23,11 +23,19 @@ pipeline {
             defaultValue: 'deploy/coolify/Dockerfile',
             description: 'Dockerfile path inside the application repo'
         )
+        booleanParam(
+            name: 'FORCE_REBUILD',
+            defaultValue: false,
+            description: 'Build and push even if the image tag already exists in Harbor'
+        )
     }
 
     environment {
         REGISTRY_HOST = 'harbor.dreadwrym.my.id'
         IMAGE_REPO    = 'harbor.dreadwrym.my.id/apps/agentmemory'
+        // Intermediate layer cache lives in Harbor, so it survives ephemeral build pods.
+        CACHE_REPO    = 'harbor.dreadwrym.my.id/apps/agentmemory-cache'
+        AUTHFILE      = '/auth/.dockerconfigjson'
 
         PUBLIC_HOSTNAME = 'agentmemory.dreadwrym.my.id'
 
@@ -49,13 +57,45 @@ pipeline {
 
                         script {
                             def appSha = sh(script: 'git -C app rev-parse --short=12 HEAD', returnStdout: true).trim()
-                            env.IMAGE = "${env.IMAGE_REPO}:${appSha}-${env.BUILD_NUMBER}"
+                            // Build args are not covered by the app SHA, so hash them into the tag.
+                            def buildInputs = sh(script: '''
+                                printf '%s' "$DOCKERFILE:$AGENTMEMORY_VERSION:$III_VERSION:$III_SDK_VERSION" | sha256sum | cut -c1-8
+                            ''', returnStdout: true).trim()
+                            env.IMAGE = "${env.IMAGE_REPO}:${appSha}-${buildInputs}"
                         }
-                        echo "Building ${env.IMAGE}"
+                    }
+                }
+
+                stage('Check Harbor') {
+                    steps {
+                        container('buildah') {
+                            script {
+                                def status = sh(script: '''
+                                    set +e
+                                    buildah --storage-driver=vfs pull \
+                                        --quiet \
+                                        --authfile "$AUTHFILE" \
+                                        "docker://$IMAGE" >/tmp/pull.log 2>&1
+                                    rc=$?
+                                    if [ "$rc" -ne 0 ]; then tail -n 5 /tmp/pull.log; fi
+                                    exit "$rc"
+                                ''', returnStatus: true)
+
+                                env.IMAGE_EXISTS = (status == 0).toString()
+                                if (status == 0) {
+                                    echo "Image already in Harbor: ${env.IMAGE}"
+                                } else {
+                                    echo "Image missing from Harbor: ${env.IMAGE}"
+                                }
+                            }
+                        }
                     }
                 }
 
                 stage('Build Image') {
+                    when {
+                        expression { env.IMAGE_EXISTS != 'true' || params.FORCE_REBUILD }
+                    }
                     steps {
                         container('buildah') {
                             sh '''
@@ -70,6 +110,10 @@ pipeline {
                                 buildah build \
                                     --storage-driver=vfs \
                                     --isolation=chroot \
+                                    --layers \
+                                    --cache-from "$CACHE_REPO" \
+                                    --cache-to "$CACHE_REPO" \
+                                    --authfile "$AUTHFILE" \
                                     --build-arg AGENTMEMORY_VERSION="$AGENTMEMORY_VERSION" \
                                     --build-arg III_VERSION="$III_VERSION" \
                                     --build-arg III_SDK_VERSION="$III_SDK_VERSION" \
@@ -82,13 +126,16 @@ pipeline {
                 }
 
                 stage('Push Image') {
+                    when {
+                        expression { env.IMAGE_EXISTS != 'true' || params.FORCE_REBUILD }
+                    }
                     steps {
                         container('buildah') {
                             sh '''
                                 set -eu
 
                                 buildah --storage-driver=vfs push \
-                                    --authfile /auth/.dockerconfigjson \
+                                    --authfile "$AUTHFILE" \
                                     "$IMAGE" "docker://$IMAGE"
                             '''
                         }

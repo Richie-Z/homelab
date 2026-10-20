@@ -69,6 +69,26 @@ resource "kubernetes_deployment_v1" "agentmemory" {
           name = "harbor-pull"
         }
 
+        # Copy the engine config into the writable PVC. The app runs the engine
+        # in the config file's directory, and the npm package dir is read-only
+        # for the runtime user, so the engine cannot create its ./config there.
+        init_container {
+          name              = "seed-engine-config"
+          image             = var.image
+          image_pull_policy = "IfNotPresent"
+
+          command = [
+            "sh",
+            "-c",
+            "cp /opt/agentmemory/node_modules/@agentmemory/agentmemory/dist/iii-config.docker.yaml /data/iii-config.yaml",
+          ]
+
+          volume_mount {
+            name       = "data"
+            mount_path = "/data"
+          }
+        }
+
         container {
           name              = "agentmemory"
           image             = var.image
@@ -98,11 +118,12 @@ resource "kubernetes_deployment_v1" "agentmemory" {
           # allowed_origins list, but the published @agentmemory/agentmemory
           # 0.9.30 renderer replaces only the key line and leaves the block
           # items behind, producing invalid YAML. The docker config uses a
-          # flow-style list, so the renderer produces valid YAML.
+          # flow-style list, so the renderer produces valid YAML. It is copied
+          # to /data above so the engine can create ./config next to it.
           # Remove this once a release contains the engine-config render fix.
           env {
             name  = "AGENTMEMORY_III_CONFIG"
-            value = "/opt/agentmemory/node_modules/@agentmemory/agentmemory/dist/iii-config.docker.yaml"
+            value = "/data/iii-config.yaml"
           }
 
           resources {

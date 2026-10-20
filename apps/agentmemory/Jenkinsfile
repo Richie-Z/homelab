@@ -31,10 +31,6 @@ pipeline {
 
         PUBLIC_HOSTNAME = 'agentmemory.dreadwrym.my.id'
 
-        APP_REPO_URL    = "${params.APP_REPO ?: 'https://github.com/owner/agentmemory.git'}"
-        APP_BRANCH_NAME = "${params.APP_BRANCH ?: 'main'}"
-        DOCKERFILE_PATH = "${params.DOCKERFILE ?: 'deploy/coolify/Dockerfile'}"
-
         AGENTMEMORY_VERSION = '0.9.30'
         III_VERSION         = '0.22.1'
         III_SDK_VERSION     = '0.22.1'
@@ -65,31 +61,33 @@ pipeline {
 
             steps {
                 dir('app') {
-                    git url: env.APP_REPO_URL, branch: env.APP_BRANCH_NAME, changelog: false, poll: false
+                    git url: params.APP_REPO, branch: params.APP_BRANCH, changelog: false, poll: false
                 }
 
-                sh '''
-                    set -eu
-                    set +x
+                container('buildah'){
+                    sh '''
+                        set -eu
+                        set +x
 
-                    # Robot account is mounted from the harbor-ci secret.
-                    AUTHFILE=/auth/.dockerconfigjson
+                        # Robot account is mounted from the harbor-ci secret.
+                        AUTHFILE=/auth/.dockerconfigjson
 
-                    buildah bud \
-                        --authfile "$AUTHFILE" \
-                        --format docker \
-                        --build-arg AGENTMEMORY_VERSION="$AGENTMEMORY_VERSION" \
-                        --build-arg III_VERSION="$III_VERSION" \
-                        --build-arg III_SDK_VERSION="$III_SDK_VERSION" \
-                        --file "app/$DOCKERFILE_PATH" \
-                        --tag "$IMAGE" \
-                        app
+                        buildah bud \
+                            --authfile "$AUTHFILE" \
+                            --format docker \
+                            --build-arg AGENTMEMORY_VERSION="$AGENTMEMORY_VERSION" \
+                            --build-arg III_VERSION="$III_VERSION" \
+                            --build-arg III_SDK_VERSION="$III_SDK_VERSION" \
+                            --file "app/$DOCKERFILE" \
+                            --tag "$IMAGE" \
+                            app
 
-                    buildah push \
-                        --authfile "$AUTHFILE" \
-                        "$IMAGE" \
-                        "docker://$IMAGE"
-                '''
+                        buildah push \
+                            --authfile "$AUTHFILE" \
+                            "$IMAGE" \
+                            "docker://$IMAGE"
+                    '''
+                }
             }
         }
 

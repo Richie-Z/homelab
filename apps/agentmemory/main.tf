@@ -21,6 +21,10 @@ resource "kubernetes_persistent_volume_claim_v1" "agentmemory_data" {
     }
   }
 
+  # local-path uses WaitForFirstConsumer: the claim only binds once the
+  # Deployment pod exists, so waiting for Bound here deadlocks the apply.
+  wait_until_bound = false
+
   lifecycle {
     prevent_destroy = true
   }

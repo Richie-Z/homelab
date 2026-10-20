@@ -65,16 +65,17 @@ pipeline {
                                 printf 'unqualified-search-registries = ["docker.io"]\\n' > "$REGCONF"
                                 export CONTAINERS_REGISTRIES_CONF="$REGCONF" 
 
+                                CONTEXT="app/$(dirname "$DOCKERFILE")" 
+
                                 buildah build \
                                     --storage-driver=vfs \
                                     --isolation=chroot \
-                                    --authfile /auth/.dockerconfigjson \
                                     --build-arg AGENTMEMORY_VERSION="$AGENTMEMORY_VERSION" \
                                     --build-arg III_VERSION="$III_VERSION" \
                                     --build-arg III_SDK_VERSION="$III_SDK_VERSION" \
                                     --file "app/$DOCKERFILE" \
                                     --tag "$IMAGE" \
-                                    app
+                                    "$CONTEXT"
                             '''
                         }
                     }

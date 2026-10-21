@@ -63,12 +63,6 @@ resource "kubernetes_deployment_v1" "agentmemory" {
       spec {
         termination_grace_period_seconds = 60
 
-        # Harbor project `apps` is private; this secret is created outside
-        # Terraform from the Jenkins `harbor-ci` dockerconfig.
-        image_pull_secrets {
-          name = "harbor-pull"
-        }
-
         # Copy the engine config into the writable PVC. The app runs the engine
         # in the config file's directory, and the npm package dir is read-only
         # for the runtime user, so the engine cannot create its ./config there.

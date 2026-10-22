@@ -1,0 +1,8 @@
+prometheusScrape: true
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 32Mi
+  limits:
+    memory: 64Mi

@@ -15,14 +15,16 @@ controller:
   resources:
     limits:
       memory: "2Gi"
+  # Pin every plugin: an unpinned name resolves to the newest release at each
+  # controller start. Keep these at versions that run on the pinned Jenkins image.
   additionalPlugins:
-    - pipeline-graph-view
-    - pipeline-stage-view
-    - role-strategy
-    - github-branch-source
-    - job-dsl
-    - theme-manager
-    - catppuccin-theme
+    - pipeline-graph-view:1053.v9df19e6ceed2
+    - pipeline-stage-view:2.41
+    - role-strategy:928.vc60b_edb_fea_e1
+    - github-branch-source:1986.v801e40614d00
+    - job-dsl:3732.v9a_c49a_61a_313
+    - theme-manager:346.v06cca_64c6a_37
+    - catppuccin-theme:15.v3940ff14e600
   JCasC:
     # Role assignments are the source of truth here: JCasC replaces the whole
     # role tree on every reload, so assign roles here, not in the UI.

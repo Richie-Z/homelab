@@ -11,6 +11,7 @@ charts=(
 	'harbor|https://api.github.com/repos/goharbor/harbor-helm/releases/latest|https://raw.githubusercontent.com/goharbor/harbor-helm/refs/heads/main/values.yaml'
 	'jenkins|https://api.github.com/repos/jenkinsci/helm-charts/releases/latest|https://raw.githubusercontent.com/jenkinsci/helm-charts/main/charts/jenkins/values.yaml'
 	'node-exporter|https://api.github.com/repos/prometheus-community/helm-charts/releases/latest|https://raw.githubusercontent.com/prometheus-community/helm-charts/main/charts/prometheus-node-exporter/values.yaml|prometheus-node-exporter-'
+	'kube-state-metrics|https://api.github.com/repos/prometheus-community/helm-charts/releases/latest|https://raw.githubusercontent.com/prometheus-community/helm-charts/main/charts/kube-state-metrics/values.yaml|kube-state-metrics-'
 )
 
 for entry in "${charts[@]}"; do

@@ -51,8 +51,7 @@ expose:
   route:
     labels: {}
     annotations: {}
-    # References to the parent gateways. Required when expose.type is "route":
-    # an HTTPRoute with no parentRefs attaches to no Gateway and cannot serve traffic.
+    # References to the parent gateways
     parentRefs: []
       # - name: envoy-internal
       #   namespace: networking
@@ -62,15 +61,6 @@ expose:
     # The hostnames for the HTTPRoute
     hosts: []
       # - "harbor.example.com"
-    # HTTPRoute filters applied to every rule
-    filters: []
-      # - type: ResponseHeaderModifier
-      #   responseHeaderModifier:
-      #     add:
-      #       - name: x-robots-tag
-      #         value: noindex, nofollow
-    # route timeouts
-    timeouts: {}
   clusterIP:
     # The name of ClusterIP service
     name: harbor
@@ -391,9 +381,7 @@ secretKey: "not-a-secure-key"
 existingSecretSecretKey: ""
 
 # The proxy settings for updating trivy vulnerabilities from the Internet and replicating
-# artifacts from/to the registries that cannot be reached directly.
-# Note: You can append `-registry` to the components list if you want to apply proxy settings
-# to the registry component, for example when using S3 with `disableredirect: true` and needing a proxy.
+# artifacts from/to the registries that cannot be reached directly
 proxy:
   httpProxy:
   httpsProxy:
@@ -513,7 +501,7 @@ containerSecurityContext:
 nginx:
   image:
     repository: docker.io/goharbor/nginx-photon
-    tag: dev
+    tag: v2.15.4
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   # mount the service account token
@@ -562,7 +550,7 @@ nginx:
 portal:
   image:
     repository: docker.io/goharbor/harbor-portal
-    tag: dev
+    tag: v2.15.4
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   # mount the service account token
@@ -620,7 +608,7 @@ portal:
 core:
   image:
     repository: docker.io/goharbor/harbor-core
-    tag: dev
+    tag: v2.15.4
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   # mount the service account token
@@ -657,11 +645,6 @@ core:
   #  requests:
   #    memory: 256Mi
   #    cpu: 100m
-  ## Resources used by `enableMigrateHelmHook: true` pre-upgrade database migration
-  # migrateHelmHookResources:
-  #   requests:
-  #     memory: 256Mi
-  #     cpu: 100m
   extraEnvVars: []
   nodeSelector: {}
   tolerations: []
@@ -736,7 +719,7 @@ core:
 jobservice:
   image:
     repository: docker.io/goharbor/harbor-jobservice
-    tag: dev
+    tag: v2.15.4
   replicas: 1
   podDisruptionBudget:
     enabled: false
@@ -821,7 +804,7 @@ registry:
   registry:
     image:
       repository: docker.io/goharbor/registry-photon
-      tag: dev
+      tag: v2.15.4
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -844,7 +827,7 @@ registry:
   controller:
     image:
       repository: docker.io/goharbor/harbor-registryctl
-      tag: dev
+      tag: v2.15.4
     # resources:
     #  requests:
     #    memory: 256Mi
@@ -943,7 +926,7 @@ trivy:
     # repository the repository for Trivy adapter image
     repository: docker.io/goharbor/trivy-adapter-photon
     # tag the tag for Trivy adapter image
-    tag: dev
+    tag: v2.15.4
   # set the service account to be used, default if left empty
   serviceAccountName: ""
   # mount the service account token
@@ -1066,7 +1049,7 @@ database:
   internal:
     image:
       repository: docker.io/goharbor/harbor-db
-      tag: dev
+      tag: v2.15.4
     # set the service account to be used, default if left empty
     serviceAccountName: ""
     # mount the service account token
@@ -1154,7 +1137,7 @@ redis:
   internal:
     image:
       repository: docker.io/goharbor/valkey-photon
-      tag: dev
+      tag: v2.15.4
     # set the service account to be used, default if left empty
     serviceAccountName: ""
     # mount the service account token
@@ -1238,7 +1221,7 @@ redis:
 exporter:
   image:
     repository: docker.io/goharbor/harbor-exporter
-    tag: dev
+    tag: v2.15.4
   serviceAccountName: ""
   # mount the service account token
   automountServiceAccountToken: false
@@ -1283,3 +1266,4 @@ exporter:
   #   whenUnsatisfiable: DoNotSchedule
   cacheDuration: 23
   cacheCleanInterval: 14400
+

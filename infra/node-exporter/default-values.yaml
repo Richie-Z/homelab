@@ -658,3 +658,4 @@ extraVolumeMounts: []
 # (for example "latest"). Digests and full image refs in image.tag are normalized
 # automatically for comparison; use image.digest when pinning with registry/repository.
 version: ""
+

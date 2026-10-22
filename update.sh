@@ -4,6 +4,8 @@ set -eu
 cd "$(dirname "$0")"
 
 # dir|helm repo/chart
+# Each version file lists every version seen, newest first. Old upstream values
+# snapshots are not kept: the repo history holds them.
 charts=(
 	'cert-manager|cert-manager/cert-manager'
 	'harbor|harbor/harbor'
@@ -17,38 +19,30 @@ for entry in "${charts[@]}"; do
 	IFS='|' read -r dir repo <<<"$entry"
 	dir="infra/$dir"
 
-	tag=$(helm show chart "$repo" | yq ".version")
+	tag=$(helm show chart "$repo" | yq '.version' | tr -d '"')
 
-	if [[ -z "$tag" ]]; then
-		echo "$dir: no tag found" >&2
+	if [[ -z "$tag" || "$tag" == "null" ]]; then
+		echo "$dir: no version found" >&2
 		exit 1
 	fi
 
 	if [[ ! -f "$dir/version" ]]; then
+		mkdir -p "$dir"
 		printf '%s\n' "$tag" >"$dir/version"
 		helm show values "$repo" >"$dir/default-values.yaml"
 		echo "$dir: $tag (new)"
 		continue
 	fi
 
-	previous=$(cat "$dir/version")
+	previous=$(head -n 1 "$dir/version")
 
-	if [[ "$previous" == "$tag" || "$previous" == "\"$tag\"" ]]; then
+	if [[ "$previous" == "$tag" ]]; then
 		echo "$dir: $tag (unchanged)"
 		continue
 	fi
 
-	archive=${previous//\"/}
-	archive=${archive//\//-}
-	mv "$dir/default-values.yaml" "$dir/$archive-default-values.yaml"
-
-	# Keep the version file's existing quoting style.
-	if [[ "$previous" == \"* ]]; then
-		printf '"%s"\n' "$tag" >"$dir/version"
-	else
-		printf '%s\n' "$tag" >"$dir/version"
-	fi
-
+	printf '%s\n' "$tag" | cat - "$dir/version" >"$dir/version.new"
+	mv "$dir/version.new" "$dir/version"
 	helm show values "$repo" >"$dir/default-values.yaml"
 	echo "$dir: $previous -> $tag"
 done

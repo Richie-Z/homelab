@@ -45,7 +45,6 @@ pipeline {
                               scriptPath('apps/${app}/Jenkinsfile')
                             }
                           }
-                          triggers { scm('H/5 * * * *') }
                         }
                         """
                     }.join('\n')

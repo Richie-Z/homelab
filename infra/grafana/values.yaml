@@ -1,0 +1,43 @@
+testFramework:
+  enabled: false
+
+deploymentStrategy:
+  type: Recreate
+
+admin:
+  existingSecret: grafana-admin
+
+resources:
+  limits:
+    memory: 768Mi
+
+persistence:
+  enabled: true
+  size: 1Gi
+
+grafana.ini:
+  analytics:
+    check_for_updates: false
+    reporting_enabled: false
+  server:
+    root_url: https://grafana.dreadwrym.my.id
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-server.observability.svc:80
+        isDefault: true
+        editable: false
+        jsonData:
+          timeInterval: 30s
+
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  hosts:
+    - grafana.dreadwrym.my.id

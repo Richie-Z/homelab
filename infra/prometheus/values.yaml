@@ -1,0 +1,51 @@
+alertmanager:
+  enabled: false
+kube-state-metrics:
+  enabled: false
+prometheus-node-exporter:
+  enabled: false
+prometheus-pushgateway:
+  enabled: false
+
+server:
+  global:
+    scrape_interval: 30s
+    evaluation_interval: 30s
+  retention: 7d
+  retentionSize: 5GB
+  persistentVolume:
+    size: 8Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+scrapeConfigs:
+  kubernetes-api-servers:
+    enabled: false
+  kubernetes-nodes:
+    enabled: false
+  kubernetes-nodes-cadvisor:
+    enabled: true
+  kubernetes-service-endpoints:
+    enabled: false
+  kubernetes-service-endpoints-slow:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: false
+  kubernetes-services:
+    enabled: false
+  kubernetes-pods:
+    enabled: false
+  kubernetes-pods-slow:
+    enabled: false
+
+  node-exporter:
+    static_configs:
+      - targets:
+          ["node-exporter-prometheus-node-exporter.observability.svc:9100"]
+  kube-state-metrics:
+    static_configs:
+      - targets: ["kube-state-metrics.observability.svc:8080"]

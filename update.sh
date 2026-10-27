@@ -14,6 +14,7 @@ charts=(
 	'kube-state-metrics|prometheus-community/kube-state-metrics'
 	'prometheus|prometheus-community/prometheus'
 	'grafana|grafana-community/grafana'
+	'prometheus-alertmanager|prometheus-community/alertmanager'
 )
 
 for entry in "${charts[@]}"; do

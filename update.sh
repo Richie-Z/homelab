@@ -13,6 +13,7 @@ charts=(
 	'node-exporter|prometheus-community/prometheus-node-exporter'
 	'kube-state-metrics|prometheus-community/kube-state-metrics'
 	'prometheus|prometheus-community/prometheus'
+	'grafana|grafana-community/grafana'
 )
 
 for entry in "${charts[@]}"; do

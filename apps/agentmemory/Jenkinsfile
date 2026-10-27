@@ -31,6 +31,12 @@ pipeline {
     }
 
     environment {
+        // Params are not reliably visible inside sh steps; copy them into env.
+        APP_REPO      = "${params.APP_REPO}"
+        APP_BRANCH    = "${params.APP_BRANCH}"
+        DOCKERFILE    = "${params.DOCKERFILE}"
+        FORCE_REBUILD = "${params.FORCE_REBUILD}"
+
         REGISTRY_HOST = 'harbor.dreadwrym.my.id'
         IMAGE_REPO    = 'harbor.dreadwrym.my.id/apps/agentmemory'
         // Intermediate layer cache lives in Harbor, so it survives ephemeral build pods.
@@ -52,7 +58,7 @@ pipeline {
                 stage('Checkout') {
                     steps {
                         dir('app') {
-                            git url: params.APP_REPO, branch: params.APP_BRANCH, changelog: false, poll: false
+                            git url: env.APP_REPO, branch: env.APP_BRANCH, changelog: false, poll: false
                         }
 
                         script {
@@ -94,7 +100,7 @@ pipeline {
 
                 stage('Build Image') {
                     when {
-                        expression { env.IMAGE_EXISTS != 'true' || params.FORCE_REBUILD }
+                        expression { env.IMAGE_EXISTS != 'true' || env.FORCE_REBUILD == 'true' }
                     }
                     steps {
                         container('buildah') {
@@ -127,7 +133,7 @@ pipeline {
 
                 stage('Push Image') {
                     when {
-                        expression { env.IMAGE_EXISTS != 'true' || params.FORCE_REBUILD }
+                        expression { env.IMAGE_EXISTS != 'true' || env.FORCE_REBUILD == 'true' }
                     }
                     steps {
                         container('buildah') {

@@ -16,3 +16,12 @@ configmapReload:
 config:
   route:
     group_by: [alertname, namespace]
+
+ingress:
+  enabled: true
+  className: traefik
+  hosts:
+    - host: alertmanager.dreadwrym.my.id
+      paths:
+        - path: /
+          pathType: Prefix

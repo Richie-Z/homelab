@@ -15,12 +15,24 @@ server:
   retentionSize: 5GB
   persistentVolume:
     size: 8Gi
+
   resources:
     requests:
       cpu: 100m
       memory: 512Mi
     limits:
       memory: 1Gi
+
+  alertmanagers:
+    - static_configs:
+        - targets: ["prometheus-alertmanager.observability.svc:9093"]
+
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - prometheus.dreadwrym.my.id
+    path: /
 
 scrapeConfigs:
   kubernetes-api-servers:
@@ -46,6 +58,72 @@ scrapeConfigs:
     static_configs:
       - targets:
           ["node-exporter-prometheus-node-exporter.observability.svc:9100"]
+
   kube-state-metrics:
     static_configs:
       - targets: ["kube-state-metrics.observability.svc:8080"]
+
+  alertmanager:
+    static_configs:
+      - targets: ["prometheus-alertmanager.observability.svc:9093"]
+
+serverFiles:
+  alerting_rules.yml:
+    groups:
+      - name: meta
+        rules:
+          - alert: Watchdog
+            expr: vector(1)
+            labels:
+              severity: none
+            annotations:
+              summary: "Always firing; proves Prometheus to Alertmanager works"
+
+      - name: instances
+        rules:
+          - alert: InstanceDown
+            expr: up == 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "{{ $labels.job }} target {{ $labels.instance }} is down"
+
+      - name: node
+        rules:
+          - alert: NodeMemoryHigh
+            expr: 1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.90
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Node memory above 90% for 10m"
+          - alert: NodeDiskLow
+            expr: node_filesystem_avail_bytes{fstype=~"ext4|xfs|btrfs"} / node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs"} < 0.15
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "{{ $labels.mountpoint }} has under 15% free"
+
+      - name: kubernetes
+        rules:
+          - alert: PodRestartingOften
+            expr: increase(kube_pod_container_status_restarts_total[30m]) > 3
+            labels:
+              severity: warning
+            annotations:
+              summary: "{{ $labels.namespace }}/{{ $labels.pod }} restarted {{ $value }} times in 30m"
+          - alert: DeploymentUnavailable
+            expr: kube_deployment_status_replicas_available < kube_deployment_spec_replicas
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "{{ $labels.namespace }}/{{ $labels.deployment }} has fewer replicas than desired"
+          - alert: ContainerOOMKilled
+            expr: increase(kube_pod_container_status_restarts_total[10m]) > 0 and on (namespace, pod, container) kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} == 1
+            labels:
+              severity: warning
+            annotations:
+              summary: "{{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) was OOMKilled"

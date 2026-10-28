@@ -35,6 +35,12 @@ datasources:
         editable: false
         jsonData:
           timeInterval: 30s
+      - name: Loki
+        uid: loki
+        type: loki
+        access: proxy
+        url: http://loki.observability.svc:80
+        editable: false
 
 ingress:
   enabled: true

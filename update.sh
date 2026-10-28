@@ -15,6 +15,7 @@ charts=(
 	'prometheus|prometheus-community/prometheus'
 	'grafana|grafana-community/grafana'
 	'prometheus-alertmanager|prometheus-community/alertmanager'
+	'loki|grafana-community/loki'
 )
 
 for entry in "${charts[@]}"; do

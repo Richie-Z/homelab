@@ -28,7 +28,7 @@ server:
         - targets: ["prometheus-alertmanager.observability.svc:9093"]
 
   ingress:
-    enabled: true
+    enabled: false
     ingressClassName: traefik
     hosts:
       - prometheus.dreadwrym.my.id

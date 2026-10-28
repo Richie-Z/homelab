@@ -18,7 +18,7 @@ config:
     group_by: [alertname, namespace]
 
 ingress:
-  enabled: true
+  enabled: false
   className: traefik
   hosts:
     - host: alertmanager.dreadwrym.my.id

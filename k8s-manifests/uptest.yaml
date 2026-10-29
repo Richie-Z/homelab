@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: uptest
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+  namespace: uptest
+data:
+  default.conf: |
+    server {
+      listen 80;
+      client_max_body_size 0;
+      client_body_timeout 300s;
+      location /up/ {
+        root /data;
+        dav_methods PUT;
+        create_full_put_path on;
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uptest
+  namespace: uptest
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: uptest }
+  template:
+    metadata:
+      labels: { app: uptest }
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:stable
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - { name: conf, mountPath: /etc/nginx/conf.d }
+            - { name: data, mountPath: /data }
+      volumes:
+        - name: conf
+          configMap: { name: nginx-conf }
+        - name: data
+          emptyDir: { sizeLimit: 1Gi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: uptest
+  namespace: uptest
+spec:
+  selector: { app: uptest }
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: uptest
+  namespace: uptest
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: uptest.dreadwrym.my.id
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: uptest
+                port:
+                  number: 80

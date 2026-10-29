@@ -8,31 +8,28 @@ prometheus-pushgateway:
   enabled: false
 
 server:
+  retention: 7d
+  retentionSize: 5GB
   global:
     scrape_interval: 30s
     evaluation_interval: 30s
-  retention: 7d
-  retentionSize: 5GB
   persistentVolume:
     size: 8Gi
-
   resources:
     requests:
       cpu: 100m
       memory: 512Mi
     limits:
       memory: 1Gi
-
-  alertmanagers:
-    - static_configs:
-        - targets: ["prometheus-alertmanager.observability.svc:9093"]
-
   ingress:
     enabled: false
     ingressClassName: traefik
     hosts:
       - prometheus.dreadwrym.my.id
     path: /
+  alertmanagers:
+    - static_configs:
+        - targets: ["prometheus-alertmanager.observability.svc:9093"]
 
 scrapeConfigs:
   kubernetes-api-servers:
@@ -58,14 +55,18 @@ scrapeConfigs:
     static_configs:
       - targets:
           ["node-exporter-prometheus-node-exporter.observability.svc:9100"]
-
   kube-state-metrics:
     static_configs:
       - targets: ["kube-state-metrics.observability.svc:8080"]
-
   alertmanager:
     static_configs:
       - targets: ["prometheus-alertmanager.observability.svc:9093"]
+  loki:
+    static_configs:
+      - targets: ["loki.observability.svc:3100"]
+  alloy:
+    static_configs:
+      - targets: ["alloy.observability.svc:12345"]
 
 serverFiles:
   alerting_rules.yml:

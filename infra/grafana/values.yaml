@@ -39,7 +39,7 @@ datasources:
         uid: loki
         type: loki
         access: proxy
-        url: http://loki.observability.svc:80
+        url: http://loki.observability.svc:3100
         editable: false
 
 ingress:

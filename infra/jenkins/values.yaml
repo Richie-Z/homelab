@@ -132,7 +132,7 @@ additionalAgents:
             type: Unconfined
     resources:
       requests: { cpu: "250m", memory: "512Mi", ephemeral-storage: "2Gi" }
-      limits: { cpu: "2", memory: "2Gi", ephemeral-storage: "10Gi" }
+      limits: { cpu: "4", memory: "4Gi", ephemeral-storage: "10Gi" }
     volumes:
       - type: Secret
         secretName: harbor-ci

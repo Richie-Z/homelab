@@ -63,26 +63,6 @@ resource "kubernetes_deployment_v1" "agentmemory" {
       spec {
         termination_grace_period_seconds = 60
 
-        # Copy the engine config into the writable PVC. The app runs the engine
-        # in the config file's directory, and the npm package dir is read-only
-        # for the runtime user, so the engine cannot create its ./config there.
-        init_container {
-          name              = "seed-engine-config"
-          image             = var.image
-          image_pull_policy = "IfNotPresent"
-
-          command = [
-            "sh",
-            "-c",
-            "cp /opt/agentmemory/node_modules/@agentmemory/agentmemory/dist/iii-config.docker.yaml /data/iii-config.yaml",
-          ]
-
-          volume_mount {
-            name       = "data"
-            mount_path = "/data"
-          }
-        }
-
         container {
           name              = "agentmemory"
           image             = var.image

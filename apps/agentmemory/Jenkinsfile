@@ -31,7 +31,6 @@ pipeline {
     }
 
     environment {
-        // Params are not reliably visible inside sh steps; copy them into env.
         APP_REPO      = "${params.APP_REPO}"
         APP_BRANCH    = "${params.APP_BRANCH}"
         DOCKERFILE    = "${params.DOCKERFILE}"
@@ -39,7 +38,6 @@ pipeline {
 
         REGISTRY_HOST = 'harbor.dreadwrym.my.id'
         IMAGE_REPO    = 'harbor.dreadwrym.my.id/apps/agentmemory'
-        // Intermediate layer cache lives in Harbor, so it survives ephemeral build pods.
         CACHE_REPO    = 'harbor.dreadwrym.my.id/apps/agentmemory-cache'
         AUTHFILE      = '/auth/.dockerconfigjson'
 
@@ -111,7 +109,7 @@ pipeline {
                                 printf 'unqualified-search-registries = ["docker.io"]\\n' > "$REGCONF"
                                 export CONTAINERS_REGISTRIES_CONF="$REGCONF" 
 
-                                CONTEXT="app/$(dirname "$DOCKERFILE")" 
+                                CONTEXT="app/$(dirname "$(dirname "$DOCKERFILE")")" 
 
                                 buildah build \
                                     --storage-driver=vfs \

@@ -20,7 +20,7 @@ pipeline {
         )
         string(
             name: 'DOCKERFILE',
-            defaultValue: 'deploy/coolify/Dockerfile',
+            defaultValue: 'deploy/Dockerfile',
             description: 'Dockerfile path inside the application repo'
         )
         booleanParam(

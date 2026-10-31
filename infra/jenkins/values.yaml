@@ -26,6 +26,10 @@ controller:
     - theme-manager
     - catppuccin-theme
   overwritePlugins: true
+  # Chart init reruns after a node reboot and `yes n | cp -i` exits 1 on the
+  # surviving plugin emptyDir, so init crashloops. Skip init after first run.
+  # Refresh plugins: delete /var/jenkins_home/initialization-completed first.
+  initializeOnce: true
   JCasC:
     # Role assignments are the source of truth here: JCasC replaces the whole
     # role tree on every reload, so assign roles here, not in the UI.

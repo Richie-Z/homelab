@@ -18,6 +18,7 @@ charts=(
 	'loki|grafana-community/loki'
 	'alloy|grafana/alloy'
 	'cnpg|cloudnative-pg/cloudnative-pg'
+	'immich|immich/immich'
 )
 
 for entry in "${charts[@]}"; do

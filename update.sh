@@ -3,7 +3,7 @@ set -eu
 
 cd "$(dirname "$0")"
 
-# dir|helm repo/chart
+# dir|helm repo/chart (or oci:// reference)
 # Each version file lists every version seen, newest first. Old upstream values
 # snapshots are not kept: the repo history holds them.
 charts=(
@@ -18,7 +18,7 @@ charts=(
 	'loki|grafana-community/loki'
 	'alloy|grafana/alloy'
 	'cnpg|cloudnative-pg/cloudnative-pg'
-	'immich|immich/immich'
+	'immich|oci://ghcr.io/immich-app/immich-charts/immich'
 )
 
 for entry in "${charts[@]}"; do

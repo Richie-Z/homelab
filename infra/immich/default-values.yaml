@@ -9,11 +9,20 @@ controllers:
     containers:
       main:
         image:
-          tag: v2.6.3
+          tag: v3.2.0
         env:
           REDIS_HOSTNAME: '{{ printf "%s-valkey" .Release.Name }}'
           IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
-          # Add the env vars to connect to your database here.
+          # Add the env vars to connect to your database here. see the example below
+          #
+          # DB_HOSTNAME: immich-postgresql-rw
+          # DB_USERNAME: immich
+          # DB_DATABASE_NAME: immich
+          # DB_PASSWORD:
+          #   valueFrom:
+          #     secretKeyRef:
+          #       name: immich-postgres-user
+          #       key: password
 
 immich:
   metrics:
@@ -51,16 +60,17 @@ valkey:
         main:
           image:
             repository: docker.io/valkey/valkey
-            tag: 9.1-alpine@sha256:34f4f659e02a67cfdf3995d11ae432219c936005055b2cd39a042e86280e053e
+            tag: 9.1.2-alpine@sha256:48332870af354a799964c0012ae1194a0bf2bf894eb508f945810596dc2d8d11
             pullPolicy: IfNotPresent
   persistence:
     data:
       enabled: true
-      size: 1Gi
-      # Optional: Set this to persistentVolumeClaim to keep job queues persistent
       type: emptyDir
-      accessMode: ReadWriteOnce
-      # storageClass: your-class
+      # Optional: to keep job queues persistent, replace `type: emptyDir` above with:
+      #   type: persistentVolumeClaim
+      #   size: 1Gi
+      #   accessMode: ReadWriteOnce
+      #   # storageClass: your-class
 
 # Immich components
 
@@ -103,9 +113,10 @@ machine-learning:
   persistence:
     cache:
       enabled: true
-      size: 10Gi
-      # Optional: Set this to persistentVolumeClaim to avoid downloading the ML models every start.
       type: emptyDir
-      accessMode: ReadWriteMany
-      # storageClass: your-class
+      # Optional: to avoid downloading the ML models on every start, replace `type: emptyDir` above with:
+      #   type: persistentVolumeClaim
+      #   size: 10Gi
+      #   accessMode: ReadWriteMany
+      #   # storageClass: your-class
 

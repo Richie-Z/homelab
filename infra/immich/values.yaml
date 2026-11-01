@@ -1,1 +1,54 @@
-# Local overrides for the immich chart (see default-values.yaml for upstream defaults).
+controllers:
+  main:
+    containers:
+      main:
+        env:
+          DB_HOSTNAME: immich-postgresql-rw
+          DB_USERNAME: immich
+          DB_DATABASE_NAME: immich
+          DB_PASSWORD:
+            valueFrom:
+              secretKeyRef:
+                name: immich-postgres-user
+                key: password
+
+immich:
+  persistence:
+    library:
+      existingClaim: immich-library
+
+valkey:
+  enabled: true
+  persistence:
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      size: 1Gi
+      accessMode: ReadWriteOnce
+      storageClass: local-path
+
+machine-learning:
+  enabled: true
+  persistence:
+    cache:
+      enabled: true
+      type: persistentVolumeClaim
+      size: 10Gi
+      accessMode: ReadWriteOnce
+      storageClass: local-path
+
+server:
+  enabled: true
+  ingress:
+    main:
+      enabled: true
+      hosts:
+        - host: immich.dreadwrym.my.id
+          paths:
+            - path: "/"
+              service:
+                identifier: main
+      tls:
+        - secretName: immich-tls
+          hosts:
+            - immich.dreadwrym.my.id

@@ -21,7 +21,7 @@ pipeline {
     }
 
     environment {
-        IMAGE          = params.IMAGE_TAG
+        IMAGE          = "${params.IMAGE_TAG}"
         FORCE_REDEPLOY = "${params.FORCE_REDEPLOY}"
         PUBLIC_HOSTNAME = '9router.dreadwrym.my.id'
     }

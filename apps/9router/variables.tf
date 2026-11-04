@@ -9,3 +9,9 @@ variable "hostname" {
   type        = string
   default     = "9router.dreadwrym.my.id"
 }
+
+variable "password" {
+  description = "Initial dashboard password (bypasses baked-in default). Set securely; fallback is CLI reset."
+  type        = string
+  default     = "admin"
+}

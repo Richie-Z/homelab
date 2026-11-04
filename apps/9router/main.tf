@@ -76,6 +76,11 @@ resource "kubernetes_deployment_v1" "ninerouter" {
           }
 
           env {
+            name  = "INITIAL_PASSWORD"
+            value = var.password
+          }
+
+          env {
             name  = "PORT"
             value = "20128"
           }

@@ -1,13 +1,13 @@
-resource "kubernetes_namespace_v1" "9router" {
+resource "kubernetes_namespace_v1" "ninerouter" {
   metadata {
     name = "9router"
   }
 }
 
-resource "kubernetes_persistent_volume_claim_v1" "9router_data" {
+resource "kubernetes_persistent_volume_claim_v1" "ninerouter_data" {
   metadata {
     name      = "9router-data"
-    namespace = kubernetes_namespace_v1.9router.metadata[0].name
+    namespace = kubernetes_namespace_v1.ninerouter.metadata[0].name
   }
 
   spec {
@@ -27,10 +27,10 @@ resource "kubernetes_persistent_volume_claim_v1" "9router_data" {
   }
 }
 
-resource "kubernetes_deployment_v1" "9router" {
+resource "kubernetes_deployment_v1" "ninerouter" {
   metadata {
     name      = "9router"
-    namespace = kubernetes_namespace_v1.9router.metadata[0].name
+    namespace = kubernetes_namespace_v1.ninerouter.metadata[0].name
 
     labels = {
       app = "9router"
@@ -94,8 +94,8 @@ resource "kubernetes_deployment_v1" "9router" {
 
           startup_probe {
             http_get {
-              path   = "/"
-              port   = "http"
+              path = "/"
+              port = "http"
             }
 
             period_seconds    = 10
@@ -105,8 +105,8 @@ resource "kubernetes_deployment_v1" "9router" {
 
           liveness_probe {
             http_get {
-              path   = "/"
-              port   = "http"
+              path = "/"
+              port = "http"
             }
 
             period_seconds    = 20
@@ -116,8 +116,8 @@ resource "kubernetes_deployment_v1" "9router" {
 
           readiness_probe {
             http_get {
-              path   = "/"
-              port   = "http"
+              path = "/"
+              port = "http"
             }
 
             period_seconds    = 10
@@ -135,7 +135,7 @@ resource "kubernetes_deployment_v1" "9router" {
           name = "data"
 
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim_v1.9router_data.metadata[0].name
+            claim_name = kubernetes_persistent_volume_claim_v1.ninerouter_data.metadata[0].name
           }
         }
       }
@@ -143,14 +143,14 @@ resource "kubernetes_deployment_v1" "9router" {
   }
 
   depends_on = [
-    kubernetes_persistent_volume_claim_v1.9router_data
+    kubernetes_persistent_volume_claim_v1.ninerouter_data
   ]
 }
 
-resource "kubernetes_service_v1" "9router" {
+resource "kubernetes_service_v1" "ninerouter" {
   metadata {
     name      = "9router"
-    namespace = kubernetes_namespace_v1.9router.metadata[0].name
+    namespace = kubernetes_namespace_v1.ninerouter.metadata[0].name
   }
 
   spec {
@@ -168,10 +168,10 @@ resource "kubernetes_service_v1" "9router" {
   }
 }
 
-resource "kubernetes_ingress_v1" "9router" {
+resource "kubernetes_ingress_v1" "ninerouter" {
   metadata {
     name      = "9router"
-    namespace = kubernetes_namespace_v1.9router.metadata[0].name
+    namespace = kubernetes_namespace_v1.ninerouter.metadata[0].name
   }
 
   spec {
@@ -192,7 +192,7 @@ resource "kubernetes_ingress_v1" "9router" {
 
           backend {
             service {
-              name = kubernetes_service_v1.9router.metadata[0].name
+              name = kubernetes_service_v1.ninerouter.metadata[0].name
 
               port {
                 number = 20128
@@ -204,3 +204,4 @@ resource "kubernetes_ingress_v1" "9router" {
     }
   }
 }
+

@@ -19,6 +19,7 @@ charts=(
 	'alloy|grafana/alloy'
 	'cnpg|cloudnative-pg/cloudnative-pg'
 	'immich|oci://ghcr.io/immich-app/immich-charts/immich'
+	'argocd|argo/argo-cd'
 )
 
 for entry in "${charts[@]}"; do

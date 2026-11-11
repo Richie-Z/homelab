@@ -9,6 +9,12 @@ alloy:
       memory: 96Mi
     limits:
       memory: 256Mi
+  extraPorts:
+    - name: gelf-udp
+      port: 12201
+      targetPort: 12201
+      protocol: UDP
+      hostPort: 12201
   configMap:
     create: true
     content: |
@@ -36,6 +42,30 @@ alloy:
       loki.source.kubernetes "pod_logs" {
         targets    = discovery.relabel.pod_logs.output
         forward_to = [loki.write.default.receiver]
+      }
+
+      loki.relabel "gelf" {
+        forward_to = [loki.write.default.receiver]
+
+        rule {
+          source_labels = ["__gelf_message_host"]
+          target_label  = "gelf_host"
+        }
+        rule {
+          source_labels = ["__gelf_message_level"]
+          target_label  = "gelf_level"
+        }
+        rule {
+          source_labels = ["__gelf_message_facility"]
+          target_label  = "gelf_facility"
+        }
+      }
+
+      loki.source.gelf "gelf" {
+        listen_address         = "0.0.0.0:12201"
+        use_incoming_timestamp = true
+        relabel_rules          = loki.relabel.gelf.rules
+        forward_to             = [loki.write.default.receiver]
       }
 
       loki.write "default" {

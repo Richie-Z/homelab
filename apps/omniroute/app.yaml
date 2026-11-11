@@ -1,0 +1,135 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: omniroute
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: omniroute-data
+  namespace: omniroute
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: local-path
+  volumeMode: Filesystem
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omniroute
+  namespace: omniroute
+  labels:
+    app: omniroute
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: omniroute
+  template:
+    metadata:
+      labels:
+        app: omniroute
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: omniroute
+          image: diegosouzapw/omniroute:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 20128
+              protocol: TCP
+          env:
+            - name: DATA_DIR
+              value: /app/data
+            - name: INITIAL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: omniroute-initial-password
+                  key: INITIAL_PASSWORD
+            - name: PORT
+              value: "20128"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+          # /healthz is the in-memory probe the image's own HEALTHCHECK uses;
+          # /api/monitoring/health hits SQLite and flaps under load.
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 2
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: omniroute-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: omniroute
+  namespace: omniroute
+spec:
+  type: ClusterIP
+  selector:
+    app: omniroute
+  ports:
+    - name: http
+      port: 20128
+      protocol: TCP
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: omniroute
+  namespace: omniroute
+  # ingress-shim creates the Certificate and its secret.
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - omniroute.dreadwrym.my.id
+      secretName: omniroute-tls
+  rules:
+    - host: omniroute.dreadwrym.my.id
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: omniroute
+                port:
+                  number: 20128

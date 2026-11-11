@@ -11,7 +11,7 @@ controller:
     ingressClassName: traefik
     hostName: jenkins.dreadwrym.my.id
   admin:
-    password: admin
+    existingSecret: jenkins
   resources:
     limits:
       memory: "2Gi"

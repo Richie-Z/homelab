@@ -12,7 +12,8 @@ expose:
 
 externalURL: https://harbor.dreadwrym.my.id
 
-harborAdminPassword: "admin"
+existingSecretAdminPassword: harbor-core
+existingSecretAdminPasswordKey: HARBOR_ADMIN_PASSWORD
 
 persistence:
   enabled: true

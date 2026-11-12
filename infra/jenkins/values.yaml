@@ -78,7 +78,7 @@ controller:
                   modernSCM:
                     libraryPath: "infra/jenkins/jenkins-shared-library"
                     scm:
-                      git:
+                      gitSource:
                         remote: "https://github.com/Richie-Z/homelab.git"
                         traits:
                           - "gitBranchDiscovery"

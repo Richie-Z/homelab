@@ -1,0 +1,90 @@
+persistence:
+  enabled: true
+  mountPVC: true
+  mountPath: /data
+  name: agentmemory-data
+  storageClass: local-path
+  storageSize: 5Gi
+
+deployment:
+  strategy:
+    type: Recreate
+  terminationGracePeriodSeconds: 60
+  image:
+    repository: harbor.dreadwrym.my.id/apps/agentmemory
+    tag: 0.9.30
+    pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: harbor-pull
+  containerSecurityContext: {}
+
+  ports:
+    - name: http
+      containerPort: 3111
+      protocol: TCP
+
+  env:
+    AGENTMEMORY_DATA_DIR:
+      value: /data
+    AGENTMEMORY_HMAC_FILE:
+      value: /data/.hmac
+    MALLOC_ARENA_MAX:
+      value: "2"
+    AGENTMEMORY_III_CONFIG:
+      value: /data/iii-config.yaml
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+
+  startupProbe:
+    enabled: true
+    httpGet:
+      path: /agentmemory/livez
+      port: http
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 36
+
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /agentmemory/livez
+      port: http
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /agentmemory/livez
+      port: http
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+service:
+  type: ClusterIP
+  ports:
+    - port: 3111
+      name: http
+      protocol: TCP
+      targetPort: http
+
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  hosts:
+    - host: agentmemory.dreadwrym.my.id
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: agentmemory-tls
+      hosts:
+        - agentmemory.dreadwrym.my.id

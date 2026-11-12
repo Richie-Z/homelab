@@ -1,3 +1,6 @@
+# agentmemory is a third-party image. This job only adds the
+# flow-style iii-config.yaml and pushes the result to Harbor. Deployment is
+# not handled here: thirdparty/agentmemory/app.yaml declares the workload.
 pipeline {
     agent none
 
@@ -40,8 +43,6 @@ pipeline {
         IMAGE_REPO    = 'harbor.dreadwrym.my.id/apps/agentmemory'
         CACHE_REPO    = 'harbor.dreadwrym.my.id/apps/agentmemory-cache'
         AUTHFILE      = '/auth/.dockerconfigjson'
-
-        PUBLIC_HOSTNAME = 'agentmemory.dreadwrym.my.id'
     }
 
     stages {
@@ -131,48 +132,6 @@ pipeline {
                                     --authfile "$AUTHFILE" \
                                     "$IMAGE" "docker://$IMAGE"
                             '''
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Deploy') {
-            agent { label 'terraform' }
-
-            stages {
-                stage('Checkout') {
-                    steps {
-                        checkout scm
-                    }
-                }
-
-                stage('Terraform Init') {
-                    steps {
-                        container('terraform') {
-                            dir('apps/agentmemory') {
-                                sh 'terraform init -input=false -lock-timeout=60s -backend-config="in_cluster_config=true"'
-                            }
-                        }
-                    }
-                }
-
-                stage('Terraform Plan') {
-                    steps {
-                        container('terraform') {
-                            dir('apps/agentmemory') {
-                                sh 'terraform plan -input=false -lock-timeout=60s -out=tfplan -var="image=${IMAGE}" -var="hostname=${PUBLIC_HOSTNAME}"'
-                            }
-                        }
-                    }
-                }
-
-                stage('Terraform Apply') {
-                    steps {
-                        container('terraform') {
-                            dir('apps/agentmemory') {
-                                sh 'terraform apply -input=false -lock-timeout=60s -auto-approve tfplan'
-                            }
                         }
                     }
                 }

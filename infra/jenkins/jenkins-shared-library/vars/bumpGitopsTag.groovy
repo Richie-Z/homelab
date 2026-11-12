@@ -31,7 +31,7 @@ def call(Map config = [:]) {
         error("bumpGitopsTag: unsafe filePath '${filePath}'")
     }
 
-    if (!(branch ==~ /^[A-Za-z0-9._/-]+$/) ||
+    if (!(branch ==~ /^[A-Za-z0-9._\/-]+$/) ||
         branch.startsWith('-') ||
         branch.contains('..') ||
         branch.endsWith('/') ||

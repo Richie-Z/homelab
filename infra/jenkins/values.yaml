@@ -16,8 +16,6 @@ controller:
   resources:
     limits:
       memory: "2Gi"
-  # Pin every plugin: an unpinned name resolves to the newest release at each
-  # controller start. Keep these at versions that run on the pinned Jenkins image.
   additionalPlugins:
     - pipeline-graph-view
     - pipeline-stage-view
@@ -27,9 +25,6 @@ controller:
     - theme-manager
     - catppuccin-theme
   overwritePlugins: true
-  # Chart init reruns after a node reboot and `yes n | cp -i` exits 1 on the
-  # surviving plugin emptyDir, so init crashloops. Skip init after first run.
-  # Refresh plugins: delete /var/jenkins_home/initialization-completed first.
   initializeOnce: true
   JCasC:
     # Role assignments are the source of truth here: JCasC replaces the whole
@@ -68,7 +63,6 @@ controller:
                 - "Job/Build"
               entries:
                 - user: "test"
-    # Seed job: scans apps/*/Jenkinsfile in this repo and creates one job per app.
     configScripts:
       global-libraries: |-
         unclassified:
@@ -76,6 +70,7 @@ controller:
             libraries:
               - name: "homelab"
                 default: true
+                defaultVersion: "master"
                 implicit: false
                 allowVersionOverride: false
                 includeInChangesets: true
@@ -87,6 +82,7 @@ controller:
                         remote: "https://github.com/Richie-Z/homelab.git"
                         traits:
                           - "gitBranchDiscovery"
+      # Seed job: scans apps/*/Jenkinsfile in this repo and creates one job per app.
       seed-job: |
         jobs:
           - script: |

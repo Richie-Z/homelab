@@ -2,7 +2,7 @@ deployment:
   replicas: 1
   image:
     repository: harbor.dreadwrym.my.id/apps/bench-check
-    tag: latest
+    tag: 95e781e
     pullPolicy: IfNotPresent
   imagePullSecrets:
     - name: harbor-pull

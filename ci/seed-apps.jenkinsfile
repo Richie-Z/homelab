@@ -1,4 +1,6 @@
-// Seed job: creates one pipeline job per apps/*/Jenkinsfile in this repo.
+// Seed job: creates one pipeline job per apps/*/Jenkinsfile (pipeline 'apps/<name>')
+// and per ci/*/Jenkinsfile (pipeline 'ci/<name>'), in this repo.
+// Appless runs still refresh this seed job, so no error on an empty matching set.
 // Triggered by SCM polling (configured in infra/jenkins/values.yaml).
 pipeline {
     agent { label 'buildah' }
@@ -26,33 +28,66 @@ pipeline {
                         .unique()
                         .sort()
 
-                    if (!apps) {
-                        error 'No apps/*/Jenkinsfile found'
-                    }
+                    def ci = sh(
+                            script: 'ls ci/*/Jenkinsfile 2>/dev/null || true',
+                            returnStdout: true
+                        ).trim()
+                        .readLines()
+                        .findAll { it }
+                        .collect { it.split('/')[1] }
+                        .unique()
+                        .sort()
 
-                    def dsl = "folder('apps')\n" + apps.collect { app ->
-                        """
-                        pipelineJob('apps/${app}') {
-                          description('Generated from apps/${app}/Jenkinsfile')
-                          definition {
-                            cpsScm {
-                              scm {
-                                git {
-                                  remote { url('${repoUrl}') }
-                                  branch('*/${branchName}')
+                    def dsl = ''
+
+                    if (!apps) {
+                        echo 'No apps/*/Jenkinsfile found'
+                    } else {
+                        dsl = "folder('apps')\n" + apps.collect { app ->
+                            """
+                            pipelineJob('apps/${app}') {
+                              description('Generated from apps/${app}/Jenkinsfile')
+                              definition {
+                                cpsScm {
+                                  scm {
+                                    git {
+                                      remote { url('${repoUrl}') }
+                                      branch('*/${branchName}')
+                                    }
+                                  }
+                                  scriptPath('apps/${app}/Jenkinsfile')
                                 }
                               }
-                              scriptPath('apps/${app}/Jenkinsfile')
                             }
-                          }
-                        }
-                        """
-                    }.join('\n')
+                            """
+                        }.join('\n')
+                        echo "Seeded jobs: ${apps.join(', ')}"
+                    }
+
+                    if (ci) {
+                        dsl += "\nfolder('ci')\n" + ci.collect { name ->
+                            """
+                            pipelineJob('ci/${name}') {
+                              description('Generated from ci/${name}/Jenkinsfile')
+                              definition {
+                                cpsScm {
+                                  scm {
+                                    git {
+                                      remote { url('${repoUrl}') }
+                                      branch('*/${branchName}')
+                                    }
+                                  }
+                                  scriptPath('ci/${name}/Jenkinsfile')
+                                }
+                              }
+                            }
+                            """
+                        }.join('\n')
+                        echo "Seeded ci jobs: ${ci.join(', ')}"
+                    }
 
                     writeFile file: 'generated_jobs.groovy', text: dsl
                     jobDsl targets: 'generated_jobs.groovy', removedJobAction: 'IGNORE'
-
-                    echo "Seeded jobs: ${apps.join(', ')}"
                 }
             }
         }

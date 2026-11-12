@@ -17,4 +17,7 @@ terraform {
 
 # No config_path here: the provider reads KUBE_CONFIG_PATH when set, otherwise
 # uses the in-cluster service account.
-provider "kubernetes" {}
+provider "kubernetes" {
+  # config_path    = "~/.kube/config"
+  # config_context = "default"
+}

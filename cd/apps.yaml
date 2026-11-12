@@ -1,0 +1,55 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: apps
+  namespace: argocd
+spec:
+  description: Generic apps deployed from apps/
+  sourceRepos:
+    - https://github.com/Richie-Z/homelab
+    - https://stakater.github.io/stakater-charts
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: "*"
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: apps
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/Richie-Z/homelab
+        revision: master
+        directories:
+          - path: apps/*
+  template:
+    metadata:
+      name: "{{ .path.basename }}"
+      labels:
+        gitops: apps
+    spec:
+      project: apps
+      sources:
+        - repoURL: ghcr.io/stakater/charts/application
+          chart: application
+          targetRevision: 9.3.2
+          helm:
+            valueFiles:
+              - $homelab/apps/{{ .path.basename }}/values.yaml
+        - repoURL: https://github.com/Richie-Z/homelab
+          targetRevision: master
+          ref: homelab
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{ .path.basename }}"
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true

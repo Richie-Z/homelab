@@ -1,0 +1,44 @@
+deployment:
+  replicas: 1
+  image:
+    repository: harbor.dreadwrym.my.id/apps/bench-check
+    tag: latest
+    pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: harbor-pull
+  ports:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /
+      port: http
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+service:
+  type: ClusterIP
+  ports:
+    - port: 80
+      name: http
+      protocol: TCP
+      targetPort: http
+
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  hosts:
+    - host: bench-check.dreadwrym.my.id
+      paths:
+        - path: /
+          pathType: Prefix

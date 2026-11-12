@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Upstream chart default values (helm show values dumps) contain placeholder examples"
+paths = ['''infra/.*/default-values\.yaml''']

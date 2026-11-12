@@ -70,6 +70,23 @@ controller:
                 - user: "test"
     # Seed job: scans apps/*/Jenkinsfile in this repo and creates one job per app.
     configScripts:
+      global-libraries: |-
+        unclassified:
+          globalLibraries:
+            libraries:
+              - name: "homelab"
+                default: true
+                implicit: false
+                allowVersionOverride: false
+                includeInChangesets: true
+                retriever:
+                  modernSCM:
+                    libraryPath: "infra/jenkins/jenkins-shared-library"
+                    scm:
+                      git:
+                        remote: "https://github.com/Richie-Z/homelab.git"
+                        traits:
+                          - "gitBranchDiscovery"
       seed-job: |
         jobs:
           - script: |

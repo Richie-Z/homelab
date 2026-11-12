@@ -8,7 +8,7 @@ spec:
   description: Generic apps deployed from apps/
   sourceRepos:
     - https://github.com/Richie-Z/homelab
-    - ghcr.io/stakater/charts/application
+    - ghcr.io/stakater/charts
   destinations:
     - server: https://kubernetes.default.svc
       namespace: "*"
@@ -38,7 +38,7 @@ spec:
     spec:
       project: apps
       sources:
-        - repoURL: ghcr.io/stakater/charts/application
+        - repoURL: ghcr.io/stakater/charts
           chart: application
           targetRevision: 9.3.2
           helm:

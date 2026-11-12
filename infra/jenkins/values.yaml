@@ -69,10 +69,9 @@ controller:
           globalLibraries:
             libraries:
               - name: "homelab"
-                default: true
-                defaultVersion: "master"
                 implicit: false
                 allowVersionOverride: false
+                defaultVersion: "master"
                 includeInChangesets: true
                 retriever:
                   modernSCM:

@@ -61,7 +61,7 @@ pipeline {
             }
         }
 
-        stage('Build image') {
+        stage('Build Image & Push') {
             steps {
                 container('buildah') {
                     script{

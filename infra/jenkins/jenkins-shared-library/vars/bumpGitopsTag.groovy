@@ -78,18 +78,11 @@ def call(Map config = [:]) {
                         git config user.email "$BUMP_EMAIL"
 
                         [ -f "$BUMP_FILE" ] || {
-                            echo "GitOps file does not exist: $BUMP_FILE" >&2
+                            echo "GitOps values file does not exist: $BUMP_FILE" >&2
                             exit 1
                         }
 
-                        # Count only keys under the top-level deployment.image block.
-                        n="$(sed -nE '/^  image:[[:space:]]*$/,/^  [a-zA-Z]/p' "$BUMP_FILE" \
-                            | grep -cE "^[[:space:]]*${BUMP_KEY}:" || true)"
-
-                        [ "$n" -eq 1 ] || {
-                            echo "Expected exactly one '${BUMP_KEY}:' under image:, found $n" >&2
-                            exit 1
-                        }
+                        out_file="$(dirname -- "$BUMP_FILE")/image.yaml"
 
                         for attempt in 1 2 3; do
                             echo "GitOps update attempt $attempt"
@@ -98,35 +91,20 @@ def call(Map config = [:]) {
                             git fetch origin "$BUMP_BRANCH"
                             git reset --hard FETCH_HEAD
 
-                            tmp="$BUMP_FILE.bump"
-                            awk -v key="$BUMP_KEY" -v val="$BUMP_TAG" '
-                                /^[[:space:]]*image:[[:space:]]*$/ { inimg = 1; match($0, /^[[:space:]]*/); base = RLENGTH; print; next }
-                                inimg && $0 !~ /^[[:space:]]*$/ {
-                                    match($0, /^[[:space:]]*/)
-                                    if (RLENGTH <= base) inimg = 0
-                                }
-                                inimg && !done && $0 ~ "^[[:space:]]*" key ":" {
-                                    match($0, /^[[:space:]]*/)
-                                    printf "%s%s: %c%s%c%c", substr($0, 1, RLENGTH), key, 34, val, 34, 10
-                                    done = 1
-                                    next
-                                }
-                                { print }
-                            ' "$BUMP_FILE" > "$tmp"
-                            mv "$tmp" "$BUMP_FILE"
-
                             qq=$(awk 'BEGIN { printf "%c", 34 }')
-                            grep -qF "${BUMP_KEY}: ${qq}${BUMP_TAG}${qq}" "$BUMP_FILE" || {
-                                echo "sed did not write ${BUMP_KEY}: ${BUMP_TAG} into $BUMP_FILE" >&2
-                                exit 1
-                            }
+                            {
+                                echo "deployment:"
+                                echo "  image:"
+                                echo "    ${BUMP_KEY}: ${qq}${BUMP_TAG}${qq}"
+                            } > "$out_file"
 
-                            if git diff --quiet -- "$BUMP_FILE"; then
+                            if git cat-file -e "HEAD:${out_file}" 2>/dev/null &&
+                               git diff --quiet -- "$out_file"; then
                                 echo "GitOps already uses $BUMP_TAG"
                                 exit 0
                             fi
 
-                            git add "$BUMP_FILE"
+                            git add "$out_file"
 
                             git commit -m \
                                 "chore($BUMP_SCOPE): bump image tag to $BUMP_TAG"

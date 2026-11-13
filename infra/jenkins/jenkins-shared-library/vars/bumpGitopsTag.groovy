@@ -1,12 +1,12 @@
 def call(Map config = [:]) {
-    def repoUrl = config.repoUrl ?: error('bumpGitopsTag: repoUrl is required')
+    def repoUrl = config.repoUrl ?: "https://github.com/Richie-Z/homelab.git"
     def branch = config.branch ?: 'master'
     def filePath = config.filePath ?: error('bumpGitopsTag: filePath is required')
     def tag = config.tag ?: error('bumpGitopsTag: tag is required')
     def key = config.key ?: 'tag'
     def credentialsId = config.credentialsId ?: error('bumpGitopsTag: credentialsId is required')
-    def userName = config.userName ?: 'jenkins'
-    def userEmail = config.userEmail ?: 'jenkins@localhost'
+    def userName = config.userName ?: 'JenkinsCI'
+    def userEmail = config.userEmail ?: 'jenkins-ci@dreadwrym.my.id'
     def scope = config.scope ?: 'gitops'
 
     if (tag == 'latest') {
@@ -26,6 +26,7 @@ def call(Map config = [:]) {
         filePath.startsWith('-') ||
         filePath.startsWith('/') ||
         filePath.contains('\\') ||
+        !filePath.contains('image.yaml') ||
         filePath.split('/').any { it == '..' || it == '.' || it == '' }
     ) {
         error("bumpGitopsTag: unsafe filePath '${filePath}'")
@@ -77,12 +78,10 @@ def call(Map config = [:]) {
                         git config user.name "$BUMP_NAME"
                         git config user.email "$BUMP_EMAIL"
 
-                        [ -f "$BUMP_FILE" ] || {
-                            echo "GitOps values file does not exist: $BUMP_FILE" >&2
+                        [ -d "$(dirname "$BUMP_FILE")" ] || {
+                            echo "GitOps dirname not found: $BUMP_FILE" >&2
                             exit 1
                         }
-
-                        out_file="$(dirname -- "$BUMP_FILE")/image.yaml"
 
                         for attempt in 1 2 3; do
                             echo "GitOps update attempt $attempt"
@@ -91,20 +90,20 @@ def call(Map config = [:]) {
                             git fetch origin "$BUMP_BRANCH"
                             git reset --hard FETCH_HEAD
 
-                            qq=$(awk 'BEGIN { printf "%c", 34 }')
+                            qq='"'
                             {
                                 echo "deployment:"
                                 echo "  image:"
                                 echo "    ${BUMP_KEY}: ${qq}${BUMP_TAG}${qq}"
-                            } > "$out_file"
+                            } > "$BUMP_FILE"
 
-                            if git cat-file -e "HEAD:${out_file}" 2>/dev/null &&
-                               git diff --quiet -- "$out_file"; then
+                            if git cat-file -e "HEAD:${BUMP_FILE}" 2>/dev/null &&
+                               git diff --quiet -- "$BUMP_FILE"; then
                                 echo "GitOps already uses $BUMP_TAG"
                                 exit 0
                             fi
 
-                            git add "$out_file"
+                            git add "$BUMP_FILE"
 
                             git commit -m \
                                 "chore($BUMP_SCOPE): bump image tag to $BUMP_TAG"

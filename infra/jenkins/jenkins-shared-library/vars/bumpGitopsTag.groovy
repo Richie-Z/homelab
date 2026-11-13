@@ -98,14 +98,24 @@ def call(Map config = [:]) {
                             git fetch origin "$BUMP_BRANCH"
                             git reset --hard FETCH_HEAD
 
-                            q='"'
-                            sed_arg='s|^([[:space:]]*'"${BUMP_KEY}"':).*|\1 '"${q}${BUMP_TAG}${q}"'|'
-                            sed -i -E \
-                                -e "/^  image:[[:space:]]*$/,/^  [a-zA-Z]/{" -e "$sed_arg" -e "}" \
-                                "$BUMP_FILE"
+                            tmp="$BUMP_FILE.bump"
+                            awk -v key="$BUMP_KEY" -v val="$BUMP_TAG" '
+                                /^[[:space:]]*image:[[:space:]]*$/ { inimg = 1; match($0, /^[[:space:]]*/); base = RLENGTH; print; next }
+                                inimg && $0 !~ /^[[:space:]]*$/ {
+                                    match($0, /^[[:space:]]*/)
+                                    if (RLENGTH <= base) inimg = 0
+                                }
+                                inimg && !done && $0 ~ "^[[:space:]]*" key ":" {
+                                    match($0, /^[[:space:]]*/)
+                                    printf "%s%s: \"%s\"\n", substr($0, 1, RLENGTH), key, val
+                                    done = 1
+                                    next
+                                }
+                                { print }
+                            ' "$BUMP_FILE" > "$tmp"
+                            mv "$tmp" "$BUMP_FILE"
 
-                            verify_arg='^[[:space:]]*'"${BUMP_KEY}"':[[:space:]]*'"${q}${BUMP_TAG}${q}"'[[:space:]]*$'
-                            grep -qE "$verify_arg" "$BUMP_FILE" || {
+                            grep -qxE "[[:space:]]*${BUMP_KEY}:[[:space:]]*\"${BUMP_TAG}\"" "$BUMP_FILE" || {
                                 echo "sed did not write ${BUMP_KEY}: ${BUMP_TAG} into $BUMP_FILE" >&2
                                 exit 1
                             }

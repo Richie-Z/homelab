@@ -107,7 +107,7 @@ def call(Map config = [:]) {
                                 }
                                 inimg && !done && $0 ~ "^[[:space:]]*" key ":" {
                                     match($0, /^[[:space:]]*/)
-                                    printf "%s%s: \"%s\"\n", substr($0, 1, RLENGTH), key, val
+                                    printf "%s%s: %c%s%c\n", substr($0, 1, RLENGTH), key, 34, val, 34
                                     done = 1
                                     next
                                 }
@@ -115,7 +115,8 @@ def call(Map config = [:]) {
                             ' "$BUMP_FILE" > "$tmp"
                             mv "$tmp" "$BUMP_FILE"
 
-                            grep -qxE "[[:space:]]*${BUMP_KEY}:[[:space:]]*\"${BUMP_TAG}\"" "$BUMP_FILE" || {
+                            qq=$(printf '\042')
+                            grep -qF "${BUMP_KEY}: ${qq}${BUMP_TAG}${qq}" "$BUMP_FILE" || {
                                 echo "sed did not write ${BUMP_KEY}: ${BUMP_TAG} into $BUMP_FILE" >&2
                                 exit 1
                             }

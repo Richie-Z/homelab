@@ -42,8 +42,10 @@ spec:
           chart: application
           targetRevision: 9.3.2
           helm:
+            ignoreMissingValueFiles: true
             valueFiles:
               - $homelab/apps/{{ .path.basename }}/values.yaml
+              - $homelab/apps/{{ .path.basename }}/image.yaml
         - repoURL: https://github.com/Richie-Z/homelab
           targetRevision: master
           ref: homelab

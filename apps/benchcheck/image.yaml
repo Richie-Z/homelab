@@ -1,0 +1,3 @@
+deployment:
+  image:
+    tag: "313dc78"

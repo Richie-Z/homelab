@@ -98,12 +98,13 @@ def call(Map config = [:]) {
                             git fetch origin "$BUMP_BRANCH"
                             git reset --hard FETCH_HEAD
 
-                            sed_arg="s|^([[:space:]]*${BUMP_KEY}:).*|\\1 \"${BUMP_TAG}\"|"
+                            q='"'
+                            sed_arg='s|^([[:space:]]*'"${BUMP_KEY}"':).*|\1 '"${q}${BUMP_TAG}${q}"'|'
                             sed -i -E \
                                 -e "/^  image:[[:space:]]*$/,/^  [a-zA-Z]/{" -e "$sed_arg" -e "}" \
                                 "$BUMP_FILE"
 
-                            verify_arg="^[[:space:]]*${BUMP_KEY}:[[:space:]]*\"${BUMP_TAG}\"[[:space:]]*$"
+                            verify_arg='^[[:space:]]*'"${BUMP_KEY}"':[[:space:]]*'"${q}${BUMP_TAG}${q}"'[[:space:]]*$'
                             grep -qE "$verify_arg" "$BUMP_FILE" || {
                                 echo "sed did not write ${BUMP_KEY}: ${BUMP_TAG} into $BUMP_FILE" >&2
                                 exit 1

@@ -67,8 +67,10 @@ pipeline {
                     script{
                         buildImage(
                             dockerFilePath: "app/$DOCKERFILE",
+                            context: 'app',
                             imageName: 'agentmemory',
                             tag: env.TAG,
+                            forceRebuild: params.FORCE_REBUILD,
                         )
                     }
                 }

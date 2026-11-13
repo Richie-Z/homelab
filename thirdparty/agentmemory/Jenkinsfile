@@ -1,6 +1,5 @@
-# agentmemory is a third-party image. This job only adds the
-# flow-style iii-config.yaml and pushes the result to Harbor. Deployment is
-# not handled here: thirdparty/agentmemory/app.yaml declares the workload.
+@Library('homelab') _
+
 pipeline {
     agent none
 
@@ -46,93 +45,31 @@ pipeline {
     }
 
     stages {
-        stage('Build & Push') {
-            agent { label 'buildah' }
+        agent { label 'buildah' }
 
-            stages {
-                stage('Checkout') {
-                    steps {
-                        dir('app') {
-                            git url: env.APP_REPO, branch: env.APP_BRANCH, changelog: false, poll: false
-                        }
-
-                        script {
-                            def appSha = sh(script: 'git -C app rev-parse --short=12 HEAD', returnStdout: true).trim()
-                            env.IMAGE = "${env.IMAGE_REPO}:${appSha}"
-                        }
-                    }
+        stage('Checkout') {
+            steps {
+                dir('app') {
+                    git url: env.APP_REPO, branch: env.APP_BRANCH, changelog: false, poll: false
                 }
 
-                stage('Check Harbor') {
-                    steps {
-                        container('buildah') {
-                            script {
-                                def status = sh(script: '''
-                                    set +e
-                                    buildah --storage-driver=vfs pull \
-                                        --quiet \
-                                        --authfile "$AUTHFILE" \
-                                        "docker://$IMAGE" >/tmp/pull.log 2>&1
-                                    rc=$?
-                                    if [ "$rc" -ne 0 ]; then tail -n 5 /tmp/pull.log; fi
-                                    exit "$rc"
-                                ''', returnStatus: true)
-
-                                env.IMAGE_EXISTS = (status == 0).toString()
-                                if (status == 0) {
-                                    echo "Image already in Harbor: ${env.IMAGE}"
-                                } else {
-                                    echo "Image missing from Harbor: ${env.IMAGE}"
-                                }
-                            }
-                        }
-                    }
+                script {
+                    def appSha = sh(script: 'git -C app rev-parse --short=12 HEAD', returnStdout: true).trim()
+                    env.TAG = appSha
+                    env.IMAGE = "${env.IMAGE_REPO}:${appSha}"
                 }
+            }
+        }
 
-                stage('Build Image') {
-                    when {
-                        expression { env.IMAGE_EXISTS != 'true' || env.FORCE_REBUILD == 'true' }
-                    }
-                    steps {
-                        container('buildah') {
-                            sh '''
-                                set -eu
-
-                                REGCONF="$(mktemp)"
-                                printf 'unqualified-search-registries = ["docker.io"]\\n' > "$REGCONF"
-                                export CONTAINERS_REGISTRIES_CONF="$REGCONF" 
-
-                                CONTEXT="app/$(dirname "$(dirname "$DOCKERFILE")")" 
-
-                                buildah build \
-                                    --storage-driver=vfs \
-                                    --isolation=chroot \
-                                    --layers \
-                                    --cache-from "$CACHE_REPO" \
-                                    --cache-to "$CACHE_REPO" \
-                                    --authfile "$AUTHFILE" \
-                                    --file "app/$DOCKERFILE" \
-                                    --tag "$IMAGE" \
-                                    "$CONTEXT"
-                            '''
-                        }
-                    }
-                }
-
-                stage('Push Image') {
-                    when {
-                        expression { env.IMAGE_EXISTS != 'true' || env.FORCE_REBUILD == 'true' }
-                    }
-                    steps {
-                        container('buildah') {
-                            sh '''
-                                set -eu
-
-                                buildah --storage-driver=vfs push \
-                                    --authfile "$AUTHFILE" \
-                                    "$IMAGE" "docker://$IMAGE"
-                            '''
-                        }
+        stage('Build image') {
+            steps {
+                container('buildah') {
+                    script{
+                        buildImage(
+                            dockerFilePath: "app/$DOCKERFILE",
+                            imageName: 'agentmemory',
+                            tag: env.TAG,
+                        )
                     }
                 }
             }

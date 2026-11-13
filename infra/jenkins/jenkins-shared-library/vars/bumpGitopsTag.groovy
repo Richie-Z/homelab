@@ -59,8 +59,8 @@ def call(Map config = [:]) {
             gitUsernamePassword(credentialsId: credentialsId)
         ]) {
             script {
-                changed = sh(
-                    returnStatus: false,
+                def rc = sh(
+                    returnStatus: true,
                     script: '''
                         set -eu
 
@@ -130,7 +130,11 @@ def call(Map config = [:]) {
                         echo "Failed to update GitOps after 3 attempts" >&2
                         exit 1
                     '''
-                ) == 10
+                )
+                if (rc != 0 && rc != 10) {
+                    error("bumpGitopsTag: updating ${filePath} failed with exit code ${rc}")
+                }
+                changed = (rc == 10)
             }
         }
     }

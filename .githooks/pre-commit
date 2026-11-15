@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+	echo "gitleaks not found; install it or run with --no-verify" >&2
+	exit 1
+fi
+
+gitleaks protect --staged --verbose --redact

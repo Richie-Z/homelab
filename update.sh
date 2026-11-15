@@ -20,6 +20,7 @@ charts=(
 	'cnpg|cloudnative-pg/cloudnative-pg'
 	'immich|oci://ghcr.io/immich-app/immich-charts/immich'
 	'argocd|argo/argo-cd'
+	'multica|oci://ghcr.io/multica-ai/charts/multica'
 )
 
 for entry in "${charts[@]}"; do

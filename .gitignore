@@ -3,3 +3,8 @@
 *.tfstate.*
 tfplan
 required-secrets.md
+docs/
+AGENTS.md
+NOTE_INFRA_GITOPS.md
+.opencode
+.superpowers

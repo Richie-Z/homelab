@@ -1,0 +1,11 @@
+postgres:
+  external:
+    enabled: true
+
+ingress:
+  enabled: true
+  className: traefik
+  frontend:
+    host: multica.dreadwrym.my.id
+  backend:
+    host: api.multica.dreadwrym.my.id

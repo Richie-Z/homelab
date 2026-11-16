@@ -21,6 +21,7 @@ charts=(
 	'immich|oci://ghcr.io/immich-app/immich-charts/immich'
 	'argocd|argo/argo-cd'
 	'multica|oci://ghcr.io/multica-ai/charts/multica'
+	'penpot|penpot/penpot'
 )
 
 for entry in "${charts[@]}"; do

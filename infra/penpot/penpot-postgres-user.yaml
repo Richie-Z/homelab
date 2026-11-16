@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: penpot-postgres-user
+  namespace: penpot
+stringData:
+  # sed "s|xx|yy|" ./infra/harbor/harbor-admin.yaml | kaf - ;
+  username: "USERNAME"
+  password: "PASSWORD"

@@ -1,0 +1,25 @@
+config:
+  publicUri: "https://penpot.dreadwrym.my.id"
+  flags: "enable-registration enable-login-with-password disable-email-verification disable-smtp enable-mcp"
+  postgresql:
+    host: penpot-postgresql-rw.penpot.svc.cluster.local
+    existingSecret: penpot-postgres-user
+    secretKeys:
+      usernameKey: username
+      passwordKey: password
+  redis:
+    host: penpot-valkey.penpot.svc.cluster.local
+
+persistence:
+  assets:
+    storageClass: local-path
+
+ingress:
+  enabled: true
+  className: traefik
+  hosts:
+    - penpot.dreadwrym.my.id
+  tls:
+    - secretName: penpot-tls
+      hosts:
+        - penpot.dreadwrym.my.id

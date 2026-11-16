@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: penpot-valkey
+  namespace: penpot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: penpot-valkey
+  template:
+    metadata:
+      labels:
+        app: penpot-valkey
+    spec:
+      containers:
+        - name: valkey
+          image: valkey/valkey:8.1
+          args:
+            - valkey-server
+            - --maxmemory
+            - 128mb
+            - --maxmemory-policy
+            - volatile-lfu
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command: ["valkey-cli", "ping"]
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command: ["valkey-cli", "ping"]
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 192Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: penpot-valkey
+  namespace: penpot
+spec:
+  type: ClusterIP
+  selector:
+    app: penpot-valkey
+  ports:
+    - name: redis
+      port: 6379
+      protocol: TCP
+      targetPort: redis

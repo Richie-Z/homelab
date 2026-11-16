@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: penpot-tls
+  namespace: penpot
+spec:
+  secretName: penpot-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - penpot.dreadwrym.my.id

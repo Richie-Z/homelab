@@ -49,6 +49,7 @@ spec:
             ignoreMissingValueFiles: true
             valueFiles:
               - $homelab/thirdparty/{{ .path.basename }}/app.yaml
+              - $homelab/thirdparty/{{ .path.basename }}/image.yaml
         - repoURL: https://github.com/Richie-Z/homelab
           targetRevision: master
           ref: homelab

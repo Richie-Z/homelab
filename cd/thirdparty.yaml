@@ -30,8 +30,8 @@ spec:
         revision: master
         directories:
           - path: thirdparty/*
-          - path: thirdparty/omniroute
-            exclude: true
+          # - path: thirdparty/omniroute
+          #   exclude: true
           - path: thirdparty/agentmemory
             exclude: true
   template:

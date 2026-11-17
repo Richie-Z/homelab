@@ -64,7 +64,7 @@ pipeline {
                     if (thirdParty) {
                         dsl += "\nfolder('thirdparty')\n" + thirdParty.collect { name ->
                             """
-                            pipelineJob('thirdParty/${name}') {
+                            pipelineJob('thirdparty/${name}') {
                               description('Generated from thirdparty/${name}/Jenkinsfile')
                               definition {
                                 cpsScm {
@@ -80,7 +80,7 @@ pipeline {
                             }
                             """
                         }.join('\n')
-                        echo "Seeded thirdParty jobs: ${thirdParty.join(', ')}"
+                        echo "Seeded thirdparty jobs: ${thirdParty.join(', ')}"
                     }
 
                     writeFile file: 'generated_jobs.groovy', text: dsl

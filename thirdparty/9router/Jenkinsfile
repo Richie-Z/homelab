@@ -55,6 +55,7 @@ pipeline {
                             imageName: '9router',
                             tag: env.TAG,
                             forceRebuild: params.FORCE_REBUILD,
+                            buildArgs: [APP_VERSION: 'latest'],
                         )
                     }
                 }

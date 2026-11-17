@@ -1,7 +1,7 @@
 @Library('homelab') _
 
 pipeline {
-    agent none
+    agent { label 'buildah' }
 
     options {
         disableConcurrentBuilds()
@@ -45,8 +45,6 @@ pipeline {
     }
 
     stages {
-        agent { label 'buildah' }
-
         stage('Checkout') {
             steps {
                 dir('app') {
@@ -71,6 +69,21 @@ pipeline {
                             imageName: 'agentmemory',
                             tag: env.TAG,
                             forceRebuild: params.FORCE_REBUILD,
+                        )
+                    }
+                }
+            }
+        }
+
+        stage('Bump GitOps tag') {
+            steps {
+                container('buildah') {
+                    script {
+                        bumpGitopsTag(
+                            filePath: 'thirdparty/agentmemory/image.yaml',
+                            scope: 'agentmemory',
+                            tag: env.TAG,
+                            credentialsId: 'gh-homelab',
                         )
                     }
                 }

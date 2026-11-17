@@ -11,7 +11,7 @@ deployment:
     type: Recreate
   terminationGracePeriodSeconds: 60
   image:
-    repository: decolua/9router
+    repository: harbor.dreadwrym.my.id/apps/9router
     tag: latest
     pullPolicy: IfNotPresent
   containerSecurityContext: null

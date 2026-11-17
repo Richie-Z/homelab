@@ -60,5 +60,20 @@ pipeline {
                 }
             }
         }
+
+        stage('Bump GitOps tag') {
+            steps {
+                container('buildah') {
+                    script {
+                        bumpGitopsTag(
+                            filePath: 'thirdparty/9router/image.yaml',
+                            scope: '9router',
+                            tag: env.TAG,
+                            credentialsId: 'gh-homelab',
+                        )
+                    }
+                }
+            }
+        }
     }
 }

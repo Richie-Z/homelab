@@ -1,3 +1,0 @@
-deployment:
-  image:
-    tag: "1855aa44473e"

@@ -7,17 +7,6 @@ def call(Map config = [:]) {
   def tag = config.tag ?: error('buildImage: tag is required')
   def context = config.context ?: new File(dockerFilePath).getParent()
   def forceRebuild = (config.forceRebuild ?: false).toBoolean()
-  def buildArgs = config.buildArgs ?: [:]
-
-  buildArgs.each { key, value ->
-      if (!(key ==~ /^[A-Za-z_][A-Za-z0-9_]*$/)) {
-          error("buildImage: unsafe build arg name '${key}'")
-      }
-      if (!("${value}" ==~ /^[A-Za-z0-9._:\/@+-]+$/)) {
-          error("buildImage: unsafe value for build arg '${key}'")
-      }
-  }
-  def buildArgFlags = buildArgs.collect { key, value -> "--build-arg ${key}=${value}" }.join(' ')
 
   def imageRepo = "$registryHost/$registryProject/$imageName"
   def cacheRepo = "$registryHost/$registryProject/${imageName}-cache"
@@ -29,7 +18,6 @@ def call(Map config = [:]) {
       "CONTEXT=${context}",
       "CACHE_REPO=${cacheRepo}",
       "IMAGE=${image}",
-      "BUILD_ARGS=${buildArgFlags}",
   ]) {
       if (forceRebuild) {
           echo "Force rebuild requested for ${env.IMAGE}"
@@ -70,7 +58,6 @@ def call(Map config = [:]) {
               --authfile "$AUTHFILE" \
               --file "$DOCKERFILE_PATH" \
               --tag "$IMAGE" \
-              $BUILD_ARGS \
               "$CONTEXT"
         '''
       )

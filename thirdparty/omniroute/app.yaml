@@ -1,3 +1,10 @@
+secret:
+  enabled: true
+  files:
+    initial-password:
+      stringData:
+        INITIAL_PASSWORD: admin
+
 persistence:
   enabled: true
   mountPVC: true

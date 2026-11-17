@@ -1,0 +1,63 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: thirdparty
+  namespace: argocd
+spec:
+  description: Third-party apps deployed from thirdparty/
+  sourceRepos:
+    - https://github.com/Richie-Z/homelab
+    - ghcr.io/stakater/charts
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: "*"
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: thirdparty
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/Richie-Z/homelab
+        revision: master
+        directories:
+          - path: thirdparty/*
+          - path: thirdparty/omniroute
+            exclude: true
+          - path: thirdparty/agentmemory
+            exclude: true
+  template:
+    metadata:
+      name: "{{ .path.basename }}"
+      labels:
+        gitops: thirdparty
+    spec:
+      project: thirdparty
+      sources:
+        - repoURL: ghcr.io/stakater/charts
+          chart: application
+          targetRevision: 9.3.2
+          helm:
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $homelab/thirdparty/{{ .path.basename }}/app.yaml
+        - repoURL: https://github.com/Richie-Z/homelab
+          targetRevision: master
+          ref: homelab
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{ .path.basename }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

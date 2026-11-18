@@ -4,8 +4,11 @@ resource "cloudflare_zero_trust_access_policy" "email" {
   decision   = "allow"
 
   include = [
-    { email = { email = "redacted@example.com" } },
-    { email = { email = "redacted@example.com" } },
+    for email in var.access_emails : {
+      email = {
+        email = email
+      }
+    }
   ]
 }
 

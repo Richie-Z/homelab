@@ -19,3 +19,8 @@ variable "zone_name" {
   description = "Cloudflare zone name."
   default     = "dreadwrym.my.id"
 }
+
+variable "access_emails" {
+  type        = set(string)
+  description = "Email addresses allowed by the Access policy."
+}

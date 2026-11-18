@@ -22,7 +22,7 @@ import {
 
 import {
   to = cloudflare_zero_trust_access_policy.penpot
-  id = "${var.account_id}/a1b6a0b1-6e3b-4628-9704-3c8018d96868"
+  id = "${var.account_id}/${local.penpot_policy_id}"
 }
 
 import {

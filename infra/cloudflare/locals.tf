@@ -1,8 +1,5 @@
 locals {
-  penpot_app_ids = {
-    penpot     = "7eb7aa9c-8a1f-4d5a-833f-268a1e1ad806"
-    penpot_mcp = "3566528f-0566-4e50-b2b8-b51b5a39b028"
-  }
+  penpot_policy_id = "a1b6a0b1-6e3b-4628-9704-3c8018d96868"
 
   access_apps = {
     "9router" = {
@@ -75,7 +72,7 @@ locals {
   access_policy_ids = {
     email  = cloudflare_zero_trust_access_policy.email.id
     bypass = cloudflare_zero_trust_access_policy.bypass.id
-    penpot = cloudflare_zero_trust_access_policy.penpot.id
+    penpot = local.penpot_policy_id
   }
 
   tunnel_hosts = [

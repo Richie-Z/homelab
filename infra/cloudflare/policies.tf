@@ -26,7 +26,7 @@ resource "cloudflare_zero_trust_access_policy" "penpot" {
 
   include = [
     { service_token = { token_id = cloudflare_zero_trust_access_service_token.penpot.id } },
-    { linked_app_token = { app_uid = local.penpot_app_ids.penpot } },
-    { linked_app_token = { app_uid = local.penpot_app_ids.penpot_mcp } },
+    { linked_app_token = { app_uid = cloudflare_zero_trust_access_application.this["penpot"].id } },
+    { linked_app_token = { app_uid = cloudflare_zero_trust_access_application.this["penpot-mcp"].id } },
   ]
 }

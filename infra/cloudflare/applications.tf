@@ -9,6 +9,9 @@ resource "cloudflare_zero_trust_access_application" "this" {
   session_duration     = "24h"
 
   http_only_cookie_attribute = false
+  auto_redirect_to_identity  = false
+  enable_binding_cookie      = false
+  options_preflight_bypass   = false
 
   destinations = [
     for uri in each.value.destinations : {

@@ -95,8 +95,9 @@ locals {
 
   tunnel_ingress = [
     for host in local.tunnel_hosts : {
-      hostname = "${host}.${var.zone_name}"
-      service  = host == "ssh" ? "ssh://localhost:22" : local.tunnel_origin
+      hostname       = "${host}.${var.zone_name}"
+      service        = host == "ssh" ? "ssh://localhost:22" : local.tunnel_origin
+      origin_request = host == "ssh" ? {} : null
     }
   ]
 

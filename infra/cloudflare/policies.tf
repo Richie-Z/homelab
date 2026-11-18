@@ -10,6 +10,10 @@ resource "cloudflare_zero_trust_access_policy" "email" {
       }
     }
   ]
+
+  connection_rules = {
+    rdp = {}
+  }
 }
 
 resource "cloudflare_zero_trust_access_policy" "bypass" {
@@ -17,6 +21,10 @@ resource "cloudflare_zero_trust_access_policy" "bypass" {
   name       = "Bypass All"
   decision   = "bypass"
   include    = [{ everyone = {} }]
+
+  connection_rules = {
+    rdp = {}
+  }
 }
 
 resource "cloudflare_zero_trust_access_policy" "penpot" {
@@ -29,4 +37,8 @@ resource "cloudflare_zero_trust_access_policy" "penpot" {
     { linked_app_token = { app_uid = cloudflare_zero_trust_access_application.this["penpot"].id } },
     { linked_app_token = { app_uid = cloudflare_zero_trust_access_application.this["penpot-mcp"].id } },
   ]
+
+  connection_rules = {
+    rdp = {}
+  }
 }

@@ -195,6 +195,12 @@ config:
   # -- Defines the maximum size of HTTP request bodies (in bytes) that Penpot will accept from clients. It controls how large files or data payloads can be when uploading files, submitting forms, or making API requests. It also helps protect against denial-of-service attacks by rejecting oversized requests. Applied to both the frontend nginx and the backend, since the effective limit is the lower of the two. Default value for Penpot is 367001600 bytes (~350 MB). See [Nginx documentation](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
   # @section -- Configuration parameters
   httpServerMaxBodySize: "367001600" 
+  # -- (int,string) Number of frontend nginx worker processes, or `auto` for one per node CPU. Left unset, the image uses the container CPU limit, rounded up, and `auto` when there is none. Requires Penpot 2.19.3 or later. See [Nginx documentation](https://nginx.org/en/docs/ngx_core_module.html#worker_processes).
+  # @section -- Configuration parameters
+  httpServerWorkerProcesses:
+  # -- (int) Maximum simultaneous connections per frontend nginx worker. Each worker reserves the memory for all of them at startup, about 30 MB with the image default of 65535. Requires Penpot 2.19.3 or later. See [Nginx documentation](https://nginx.org/en/docs/ngx_core_module.html#worker_connections).
+  # @section -- Configuration parameters
+  httpServerWorkerConnections:
 
   smtp:
     # -- Whether to enable SMTP configuration. You also need to add the 'enable-smtp' flag to the PENPOT_FLAGS variable.
@@ -397,7 +403,7 @@ backend:
     repository: penpotapp/backend
     # -- The image tag to use.
     # @section -- Backend parameters
-    tag: 2.19.1
+    tag: 2.19.3
     # -- The image pull policy to use.
     # @section -- Backend parameters
     pullPolicy: IfNotPresent
@@ -540,7 +546,7 @@ frontend:
     repository: penpotapp/frontend
     # -- The image tag to use.
     # @section -- Frontend parameters
-    tag: 2.19.1
+    tag: 2.19.3
     # -- The image pull policy to use.
     # @section -- Frontend parameters
     pullPolicy: IfNotPresent
@@ -675,7 +681,7 @@ exporter:
     repository: penpotapp/exporter
     # -- The image tag to use.
     # @section -- Exporter parameters
-    tag: 2.19.1
+    tag: 2.19.3
     # -- Deprecated, use `pullPolicy` instead. The image pull policy to use. Kept for backwards compatibility: this component historically used a different key name than the backend and frontend. If `pullPolicy` is set it takes precedence, and this key will be removed in a future major version.
     # @section -- Exporter parameters
     imagePullPolicy: IfNotPresent
@@ -743,6 +749,18 @@ exporter:
     # -- The requested resources for the Penpot containers.
     # @section -- Exporter parameters
     requests: {}
+  # -- Readiness probe for the exporter containers, so a new pod receives traffic only once its HTTP server is listening. Check [the official doc](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes)
+  # @section -- Exporter parameters
+  readinessProbe:
+    httpGet:
+      path: /readyz
+      port: http
+  # -- Lifecycle hooks for the exporter containers. The default `preStop` delays SIGTERM so the pod leaves the Service endpoints before the exporter stops accepting connections. To use another handler, such as `sleep` on Kubernetes 1.30+, set `exec: null` next to it. Check [the official doc](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/)
+  # @section -- Exporter parameters
+  lifecycle:
+    preStop:
+      exec:
+        command: ["sleep", "5"]
   # -- Configure Pod Disruption Budget for the exporter pods. Check [the official doc](https://kubernetes.io/docs/tasks/run-application/configure-pdb/)
   # @section -- Exporter parameters
   pdb:
@@ -810,7 +828,7 @@ mcp:
     repository: penpotapp/mcp
     # -- The image tag to use.
     # @section -- MCP parameters
-    tag: 2.19.1
+    tag: 2.19.3
     # -- Deprecated, use `pullPolicy` instead. The image pull policy to use. Kept for backwards compatibility: this component historically used a different key name than the backend and frontend. If `pullPolicy` is set it takes precedence, and this key will be removed in a future major version.
     # @section -- MCP parameters
     imagePullPolicy: IfNotPresent
@@ -948,7 +966,7 @@ adminConsole:
     repository: penpotapp/admin-console
     # -- The image tag to use.
     # @section -- Admin Console parameters
-    tag: 2.19.1
+    tag: 2.19.3
     # -- Deprecated, use `pullPolicy` instead. The image pull policy to use. Kept for backwards compatibility: this component historically used a different key name than the backend and frontend. If `pullPolicy` is set it takes precedence, and this key will be removed in a future major version.
     # @section -- Admin Console parameters
     imagePullPolicy: IfNotPresent

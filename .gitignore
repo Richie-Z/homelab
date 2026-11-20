@@ -2,6 +2,7 @@
 *.tfstate
 *.tfstate.*
 tfplan
+*.tfvars
 required-secrets.md
 docs/
 AGENTS.md

@@ -154,6 +154,58 @@ additionalAgents:
       - type: Secret
         secretName: harbor-ci
         mountPath: /auth
+  node:
+    podName: node
+    customJenkinsLabels: node
+    sideContainerName: node
+    image:
+      repository: node
+      tag: "24-alpine"
+    command: "/bin/sh -c"
+    args: "cat"
+    TTYEnabled: true
+    resources:
+      requests: { cpu: "100m", memory: "256Mi", ephemeral-storage: "1Gi" }
+      limits: { cpu: "1", memory: "1Gi", ephemeral-storage: "5Gi" }
+  php:
+    podName: php
+    customJenkinsLabels: php
+    sideContainerName: php
+    image:
+      repository: composer
+      tag: "2"
+    command: "/bin/sh -c"
+    args: "cat"
+    TTYEnabled: true
+    resources:
+      requests: { cpu: "100m", memory: "256Mi", ephemeral-storage: "1Gi" }
+      limits: { cpu: "1", memory: "1Gi", ephemeral-storage: "5Gi" }
+  python:
+    podName: python
+    customJenkinsLabels: python
+    sideContainerName: python
+    image:
+      repository: ghcr.io/astral-sh/uv
+      tag: "python3.8-bookworm-slim"
+    command: "/bin/sh -c"
+    args: "cat"
+    TTYEnabled: true
+    resources:
+      requests: { cpu: "100m", memory: "256Mi", ephemeral-storage: "1Gi" }
+      limits: { cpu: "1", memory: "1Gi", ephemeral-storage: "5Gi" }
+  go:
+    podName: go
+    customJenkinsLabels: go
+    sideContainerName: go
+    image:
+      repository: golang
+      tag: "1.24-alpine"
+    command: "/bin/sh -c"
+    args: "cat"
+    TTYEnabled: true
+    resources:
+      requests: { cpu: "100m", memory: "256Mi", ephemeral-storage: "1Gi" }
+      limits: { cpu: "1", memory: "1Gi", ephemeral-storage: "5Gi" }
   terraform:
     podName: terraform
     customJenkinsLabels: terraform

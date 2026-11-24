@@ -67,6 +67,11 @@ locals {
       destinations = ["ssh.${var.zone_name}"]
       policy       = "email"
     }
+    opencode = {
+      name         = "opencode"
+      destinations = ["opencode.${var.zone_name}"]
+      policy       = "email"
+    }
   }
 
   access_policy_ids = {
@@ -75,29 +80,30 @@ locals {
     penpot = local.penpot_policy_id
   }
 
-  tunnel_hosts = [
-    "ssh",
-    "harbor",
-    "jenkins",
-    "bench-check",
-    "agentmemory",
-    "grafana",
-    "prometheus",
-    "alertmanager",
-    "9router",
-    "omniroute",
-    "argocd",
-    "multica",
-    "penpot",
-  ]
-
   tunnel_origin = "http://192.168.18.43:80"
+
+  tunnel_hosts = [
+    { name = "ssh", service = "ssh://localhost:22", origin_request = {} },
+    { name = "harbor" },
+    { name = "jenkins" },
+    { name = "bench-check" },
+    { name = "agentmemory" },
+    { name = "grafana" },
+    { name = "prometheus" },
+    { name = "alertmanager" },
+    { name = "9router" },
+    { name = "omniroute" },
+    { name = "argocd" },
+    { name = "multica" },
+    { name = "penpot" },
+    { name = "opencode", service = "http://127.0.0.1:49374" },
+  ]
 
   tunnel_ingress = [
     for host in local.tunnel_hosts : {
-      hostname       = "${host}.${var.zone_name}"
-      service        = host == "ssh" ? "ssh://localhost:22" : local.tunnel_origin
-      origin_request = host == "ssh" ? {} : null
+      hostname       = "${host.name}.${var.zone_name}"
+      service        = try(host.service, local.tunnel_origin)
+      origin_request = try(host.origin_request, null)
     }
   ]
 }

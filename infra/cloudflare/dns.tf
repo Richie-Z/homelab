@@ -1,5 +1,5 @@
 resource "cloudflare_dns_record" "tunnel" {
-  for_each = toset(local.tunnel_hosts)
+  for_each = { for host in local.tunnel_hosts : host.name => host }
 
   zone_id = var.zone_id
   name    = "${each.key}.${var.zone_name}"

@@ -1,0 +1,49 @@
+nextcloud:
+  host: nextcloud.dreadwrym.my.id
+  trustedDomains:
+    - nextcloud.dreadwrym.my.id
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-secrets
+    usernameKey: nextcloud-username
+    passwordKey: nextcloud-password
+  extraEnv:
+    - name: TRUSTED_PROXIES
+      value: 10.42.0.0/16
+
+internalDatabase:
+  enabled: false
+
+externalDatabase:
+  enabled: true
+  type: postgresql
+  host: nextcloud-postgresql-rw
+  database: nextcloud
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-postgres-user
+    usernameKey: username
+    passwordKey: password
+
+ingress:
+  enabled: true
+  className: traefik
+  tls:
+    - secretName: nextcloud-tls
+      hosts:
+        - nextcloud.dreadwrym.my.id
+
+persistence:
+  enabled: true
+  existingClaim: nextcloud-data
+
+cronjob:
+  enabled: true
+  type: cronjob
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    memory: 2Gi

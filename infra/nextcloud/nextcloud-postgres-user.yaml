@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nextcloud-postgres-user
+  namespace: nextcloud
+stringData:
+  username: "nextcloud"
+  password: "PASSWORD"

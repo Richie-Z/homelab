@@ -22,6 +22,7 @@ charts=(
 	'argocd|argo/argo-cd'
 	'multica|oci://ghcr.io/multica-ai/charts/multica'
 	'penpot|penpot/penpot'
+	'nextcloud|nextcloud/nextcloud'
 )
 
 for entry in "${charts[@]}"; do

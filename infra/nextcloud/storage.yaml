@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nextcloud
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hdd1-nextcloud
+spec:
+  capacity:
+    storage: 500Gi
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: hdd-local
+  local:
+    path: /mnt/hdd1/nextcloud
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values: [dreadwrym]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-data
+  namespace: nextcloud
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: hdd-local
+  volumeName: hdd1-nextcloud
+  resources:
+    requests:
+      storage: 500Gi

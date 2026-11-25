@@ -72,6 +72,11 @@ locals {
       destinations = ["opencode.${var.zone_name}"]
       policy       = "email"
     }
+    nextcloud = {
+      name         = "nextcloud"
+      destinations = ["nextcloud.${var.zone_name}"]
+      policy       = "email"
+    }
   }
 
   access_policy_ids = {
@@ -97,6 +102,7 @@ locals {
     { name = "multica" },
     { name = "penpot" },
     { name = "opencode", service = "http://127.0.0.1:49374" },
+    { name = "nextcloud" },
   ]
 
   tunnel_ingress = [

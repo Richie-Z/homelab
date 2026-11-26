@@ -9,7 +9,7 @@ metadata:
   name: hdd1-nextcloud
 spec:
   capacity:
-    storage: 500Gi
+    storage: 2700Gi
   accessModes: [ReadWriteOnce]
   persistentVolumeReclaimPolicy: Retain
   storageClassName: hdd-local
@@ -34,4 +34,4 @@ spec:
   volumeName: hdd1-nextcloud
   resources:
     requests:
-      storage: 500Gi
+      storage: 2700Gi

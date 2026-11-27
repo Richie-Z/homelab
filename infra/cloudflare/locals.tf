@@ -77,6 +77,11 @@ locals {
       destinations = ["nextcloud.${var.zone_name}"]
       policy       = "email"
     }
+    vaultwarden = {
+      name         = "vaultwarden"
+      destinations = ["vaultwarden.${var.zone_name}"]
+      policy       = "bypass"
+    }
   }
 
   access_policy_ids = {
@@ -103,6 +108,7 @@ locals {
     { name = "penpot" },
     { name = "opencode", service = "http://127.0.0.1:49374" },
     { name = "nextcloud" },
+    { name = "vaultwarden" },
   ]
 
   tunnel_ingress = [

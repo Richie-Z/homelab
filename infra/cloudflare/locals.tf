@@ -80,7 +80,19 @@ locals {
     vaultwarden = {
       name         = "vaultwarden"
       destinations = ["vaultwarden.${var.zone_name}"]
-      policy       = "bypass"
+      policy       = "email"
+    }
+    vaultwarden-client = {
+      name = "vaultwarden-client"
+      destinations = [
+        "vaultwarden.${var.zone_name}/api/*",
+        "vaultwarden.${var.zone_name}/identity/*",
+        "vaultwarden.${var.zone_name}/notifications/*",
+        "vaultwarden.${var.zone_name}/icons/*",
+        "vaultwarden.${var.zone_name}/attachments/*",
+        "vaultwarden.${var.zone_name}/events/*",
+      ]
+      policy = "bypass"
     }
   }
 

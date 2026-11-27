@@ -1,0 +1,43 @@
+domain: "https://vaultwarden.dreadwrym.my.id"
+
+replicas: 1
+
+database:
+  type: postgresql
+  host: vaultwarden-postgresql-rw
+  port: "5432"
+  dbName: vaultwarden
+  existingSecret: vaultwarden-postgres-user
+  existingSecretUserKey: username
+  existingSecretPasswordKey: password
+
+storage:
+  data:
+    name: data
+    size: 5Gi
+    class: local-path
+    path: /data
+    keepPvc: true
+    accessMode: ReadWriteOnce
+
+strategy:
+  type: Recreate
+
+signupsAllowed: true
+signupsVerify: "false"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+ingress:
+  enabled: true
+  class: traefik
+  nginxIngressAnnotations: false
+  hostname: vaultwarden.dreadwrym.my.id
+  tls: true
+  tlsSecret: vaultwarden-tls

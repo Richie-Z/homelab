@@ -23,6 +23,7 @@ charts=(
 	'multica|oci://ghcr.io/multica-ai/charts/multica'
 	'penpot|penpot/penpot'
 	'nextcloud|nextcloud/nextcloud'
+	'vaultwarden|vaultwarden/vaultwarden'
 )
 
 for entry in "${charts[@]}"; do
